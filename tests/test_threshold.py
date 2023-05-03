@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from python.sensu_plugin.lib import Threshold
+from sensu_plugin import Threshold
 
 logging.getLogger().setLevel(logging.DEBUG)
 

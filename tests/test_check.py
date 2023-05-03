@@ -7,7 +7,7 @@ import shutil
 import time
 
 from freezegun import freeze_time
-from python.sensu_plugin.lib import SensuPluginCheck, Threshold
+from sensu_plugin import SensuPluginCheck, Threshold
 
 test_check = SensuPluginCheck()
 test_check.test_mode = True
