@@ -5,3 +5,4 @@ flake8-use-fstring
 flake8-black
 flake8-isort
 pytest
+freezegun
