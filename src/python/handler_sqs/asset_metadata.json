@@ -1,0 +1,21 @@
+{
+  "asset_name": "core/handler_sqs",
+  "description": "A Sensu handler for forwarding events onto AWS SQS",
+  "version": "1.0",
+  "type": "python",
+  "python_version": "3.9.10",
+  "requirements": [
+    "boto3"
+  ],
+  "test_command": "python handler_sqs.py --help",
+  "systems": [
+    {
+      "os": "linux",
+      "platform_family": "alpine",
+      "sensu_filters": [
+        "entity.system.os == 'linux'",
+        "entity.system.platform_family == 'alpine'"
+      ]
+    }
+  ]
+}

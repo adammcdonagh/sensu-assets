@@ -1,0 +1,14 @@
+{
+  "asset_name": "core/sensu_plugin",
+  "description": "Base Python libraries for Sensu checks",
+  "version": "1.0",
+  "type": "python",
+  "python_version": "3.9.10",
+  "requirements": [],
+  "systems": [
+    {
+      "os": "linux",
+      "sensu_filters": []
+    }
+  ]
+}

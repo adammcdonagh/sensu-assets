@@ -1,0 +1,20 @@
+[
+  // Simple ignore
+  {
+    "id": "/vscode",
+    "ignore": "Y"
+  },
+  // Simple override of threshold values
+  {
+    "id": "/etc/hosts",
+    "ignore": "N",
+    "warn_threshold": "90",
+    "crit_threshold": "99"
+  },
+  // Simple override of team only
+  {
+    "id": "/etc/hosts",
+    "ignore": "N",
+    "team": "Unix"
+  }
+]

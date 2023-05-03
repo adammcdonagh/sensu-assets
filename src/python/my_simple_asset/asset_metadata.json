@@ -1,0 +1,31 @@
+{
+  "asset_name": "example/my_simple_asset",
+  "description": "A sample asset with no dependencies to test that build scripts work",
+  "version": "1.0",
+  "type": "python",
+  "python_version": "3.9.10",
+  "requirements": [],
+  "test_command": "python example.py",
+  "systems": [
+    {
+      "os": "linux",
+      "arch": "amd64",
+      "platform_family": "rhel",
+      "platform_version": 8,
+      "sensu_filters": [
+        "entity.system.os == 'linux'",
+        "entity.system.arch == 'amd64'",
+        "( entity.system.platform_family == 'rhel' || entity.system.platform_family == 'almalinux')",
+        "parseInt(entity.system.platform_version.split('.')[0]) == 8"
+      ]
+    },
+    {
+      "os": "linux",
+      "platform_family": "alpine",
+      "sensu_filters": [
+        "entity.system.os == 'linux'",
+        "entity.system.platform_family == 'alpine'"
+      ]
+    }
+  ]
+}
