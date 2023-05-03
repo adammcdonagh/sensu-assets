@@ -1,0 +1,29 @@
+{
+  "asset_name": "core/handler_graphite",
+  "description": "A Sensu handler outputting metrics to Graphite",
+  "version": "1.0",
+  "type": "python",
+  "python_version": "3.9.10",
+  "requirements": [],
+  "test_command": "python handler_graphite.py --help",
+  "systems": [
+    {
+      "os": "linux",
+      "arch": "aarch64",
+      "platform_family": "alpine",
+      "sensu_filters": [
+        "entity.system.os == 'linux'",
+        "entity.system.platform_family == 'alpine'"
+      ]
+    },
+    {
+      "os": "linux",
+      "arch": "amd64",
+      "platform_family": "alpine",
+      "sensu_filters": [
+        "entity.system.os == 'linux'",
+        "entity.system.platform_family == 'alpine'"
+      ]
+    }
+  ]
+}

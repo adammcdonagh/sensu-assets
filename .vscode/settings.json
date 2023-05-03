@@ -1,0 +1,13 @@
+{
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  "python.autoComplete.extraPaths": [
+    "src/python/sensu_plugin/lib"
+  ],
+  "python.analysis.extraPaths": [
+    "src/python/sensu_plugin/lib"
+  ],
+}

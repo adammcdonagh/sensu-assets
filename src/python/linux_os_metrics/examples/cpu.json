@@ -1,0 +1,62 @@
+[
+  // Example basic threshold with a time period monitoring the CPU % used
+  {
+    "warn_threshold": "90%",
+    "warn_time_period": "60m",
+    "crit_threshold": "95%",
+    "crit_time_period": "60m",
+    "min_severity": "Minor",
+    "team": "SomeTeam"
+  },
+  // Basic threshold with a time period monitoring the CPU % used and also a time window where
+  // no alerts will generate
+  {
+    "warn_threshold": "2%",
+    "warn_time_period": "10m",
+    "crit_threshold": "25%",
+    "crit_time_period": "10m",
+    "min_severity": "Minor",
+    "team": "SomeTeam",
+    "exclude_times": [
+      {
+        "days_of_week": [
+          "Monday",
+          "Tuesday"
+        ],
+        "start_time": "10:00",
+        "end_time": "12:00"
+      },
+      {
+        "days_of_week": [
+          "Wednesday"
+        ],
+        "start_time": "11:00",
+        "end_time": "13:00"
+      },
+      {
+        "days_of_week": [
+          "Monday"
+        ],
+        "start_time": "11:00",
+        "end_time": "19:00"
+      }
+    ]
+  },
+  // Basic threshold monitoring number of CPU cores in use over a time period
+  {
+    "warn_threshold": "1core",
+    "warn_time_period": "60m",
+    "min_severity": "Minor"
+  },
+  // Basic threshold that will alert immediately once the % used threshold is breached
+  {
+    "warn_threshold": "1%",
+    "min_severity": "Minor"
+  },
+  // Threshold that will alert after a number of cores are used over a number of occurrences
+  {
+    "warn_threshold": "1core",
+    "warn_occurrences": "10",
+    "min_severity": "Minor"
+  }
+]
