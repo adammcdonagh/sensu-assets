@@ -1,0 +1,44 @@
+name: Test & Linting
+
+env:
+  PYTHON_VERSION: 3.11
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize]
+    branches: main
+
+jobs:
+  python_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Run flake8
+        uses: julianwachholz/flake8-action@v2
+        with:
+          checkName: "Python Lint"
+          path: "./"
+          plugins: flake8-bugbear pep8-naming flake8-use-fstring flake8-black flake8-isort
+          config: .flake8
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install -r requirements.txt
+          pip install -r requirements_dev.txt
+      - name: Run tests
+        run: |
+          python -m pytest
