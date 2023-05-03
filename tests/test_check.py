@@ -14,7 +14,14 @@ test_check.test_mode = True
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_basic_warn_threshold(caplog):
+def cache_dir(tmpdir):
+    """
+    Set the cache dir to a temporary directory
+    """
+    test_check.SENSU_CACHE_DIR = tmpdir
+
+
+def test_basic_warn_threshold(caplog, tmpdir):
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -76,7 +83,7 @@ def test_basic_warn_threshold(caplog):
     run_process_value_check(test_values, ">=")
 
 
-def test_basic_warn_with_crit_threshold(caplog):
+def test_basic_warn_with_crit_threshold(caplog, tmpdir):
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -171,7 +178,7 @@ def test_basic_warn_with_crit_threshold(caplog):
     run_process_value_check(test_values, ">=")
 
 
-def test_basic_crit_threshold(caplog):
+def test_basic_crit_threshold(caplog, tmpdir):
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -195,7 +202,7 @@ def test_basic_crit_threshold(caplog):
     run_process_value_check(test_values, ">=")
 
 
-def test_advanced_warn_threshold_occurrences(caplog):
+def test_advanced_warn_threshold_occurrences(caplog, tmpdir):
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -250,7 +257,7 @@ def test_advanced_warn_threshold_occurrences(caplog):
     run_process_value_check(test_values, ">=")
 
 
-def test_advanced_warn_and_crit_threshold_occurrences(caplog):
+def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -360,7 +367,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog):
     run_process_value_check(test_values, ">=")
 
 
-def test_advanced_warn_threshold_time(caplog):
+def test_advanced_warn_threshold_time(caplog, tmpdir):
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -405,7 +412,7 @@ def test_advanced_warn_threshold_time(caplog):
     run_process_value_check(test_values, ">=")
 
 
-def test_advanced_warn_and_crit_threshold_time(caplog):
+def test_advanced_warn_and_crit_threshold_time(caplog, tmpdir):
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -484,7 +491,7 @@ def test_advanced_warn_and_crit_threshold_time(caplog):
 
 
 @freeze_time("2022-05-04 15:00:00")
-def test_basic_warn_threshold_with_exclude_period(caplog):
+def test_basic_warn_threshold_with_exclude_period(caplog, tmpdir):
     logging.info(f"Current time is {datetime.datetime.now()}")
 
     caplog.set_level(logging.DEBUG)
