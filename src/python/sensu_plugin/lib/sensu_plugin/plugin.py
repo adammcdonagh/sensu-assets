@@ -22,20 +22,6 @@ class SensuPlugin(object):
     Base class used by both checks and metrics plugins.
     """
 
-    # Determine the CACHE_DIR based on the platform, unless its overridden in the environment
-    if os.environ.get("SENSU_CACHE_DIR"):
-        SENSU_CACHE_DIR = os.environ.get("SENSU_CACHE_DIR")
-    else:
-        # If windows then use the default windows cache dir
-        # if macos then use /tmp/sensu-agent
-        # oterhwise use /var/cache/sensu/sensu-agent
-        if platform.system() == "Windows":
-            SENSU_CACHE_DIR = "C:\\ProgramData\\sensu\\cache\\sensu-agent"
-        elif platform.system() == "Darwin":
-            SENSU_CACHE_DIR = "/tmp/sensu-agent"
-        else:
-            SENSU_CACHE_DIR = "/var/cache/sensu/sensu-agent"
-
     def __init__(self, autorun=True):
         logging.basicConfig(level=logging.INFO)
 
@@ -46,6 +32,20 @@ class SensuPlugin(object):
 
         handlers = logging.getLogger().handlers
         handlers[0].setFormatter(CustomFormatter())
+
+        # Determine the CACHE_DIR based on the platform, unless its overridden in the environment
+        if os.environ.get("SENSU_CACHE_DIR"):
+            self.SENSU_CACHE_DIR = os.environ.get("SENSU_CACHE_DIR")
+        else:
+            # If windows then use the default windows cache dir
+            # if macos then use /tmp/sensu-agent
+            # oterhwise use /var/cache/sensu/sensu-agent
+            if platform.system() == "Windows":
+                self.SENSU_CACHE_DIR = "C:\\ProgramData\\sensu\\cache\\sensu-agent"
+            elif platform.system() == "Darwin":
+                self.SENSU_CACHE_DIR = "/tmp/sensu-agent"
+            else:
+                self.SENSU_CACHE_DIR = "/var/cache/sensu/sensu-agent"
 
         self.plugin_info = {"check_name": None, "message": None, "status": None}
 

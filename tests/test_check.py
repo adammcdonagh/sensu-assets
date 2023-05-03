@@ -3,25 +3,26 @@
 import datetime
 import logging
 import os
-import shutil
 import time
 
+import pytest
 from freezegun import freeze_time
 from sensu_plugin import SensuPluginCheck, Threshold
 
-test_check = SensuPluginCheck()
-test_check.test_mode = True
 logging.getLogger().setLevel(logging.DEBUG)
 
 
+@pytest.fixture(scope="function")
 def cache_dir(tmpdir):
     """
     Set the cache dir to a temporary directory
     """
-    test_check.SENSU_CACHE_DIR = tmpdir
+    os.environ["SENSU_CACHE_DIR"] = tmpdir.strpath
 
 
-def test_basic_warn_threshold(caplog, tmpdir):
+def test_basic_warn_threshold(caplog, cache_dir):
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -56,7 +57,7 @@ def test_basic_warn_threshold(caplog, tmpdir):
         },
     ]
 
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Set up a standard threshold with no ID
     test_values = [
@@ -80,10 +81,12 @@ def test_basic_warn_threshold(caplog, tmpdir):
         },
     ]
 
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
-def test_basic_warn_with_crit_threshold(caplog, tmpdir):
+def test_basic_warn_with_crit_threshold(caplog, cache_dir):
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -119,7 +122,7 @@ def test_basic_warn_with_crit_threshold(caplog, tmpdir):
         },
     ]
 
-    run_process_value_check(test_values, ">=", check_alert_key=True)
+    run_process_value_check(test_values, test_check, ">=", check_alert_key=True)
 
     # Set up a standard threshold with no ID
     test_values = [
@@ -143,7 +146,7 @@ def test_basic_warn_with_crit_threshold(caplog, tmpdir):
         },
     ]
 
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Redefine the threshold with a higher min severity to check rc 2 return codes
     kwargs["metadata"] = metadata
@@ -175,10 +178,12 @@ def test_basic_warn_with_crit_threshold(caplog, tmpdir):
         },
     ]
 
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
-def test_basic_crit_threshold(caplog, tmpdir):
+def test_basic_crit_threshold(caplog, cache_dir):
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -199,10 +204,12 @@ def test_basic_crit_threshold(caplog, tmpdir):
         },
     ]
 
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_threshold_occurrences(caplog, tmpdir):
+def test_advanced_warn_threshold_occurrences(caplog, cache_dir):
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -213,11 +220,6 @@ def test_advanced_warn_threshold_occurrences(caplog, tmpdir):
     kwargs["team"] = "Test"
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
-
-    # Clear down any previous state files that might exist
-    # delete the directory
-    if os.path.exists(test_check.SENSU_CACHE_DIR):
-        shutil.rmtree(test_check.SENSU_CACHE_DIR)
 
     # Run the check once, check that it doesnt error
 
@@ -230,7 +232,7 @@ def test_advanced_warn_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 1")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Run the checks a second time, also check it doesnt error
     test_values = [
@@ -242,7 +244,7 @@ def test_advanced_warn_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 2")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Run the check a 3rd time and check that it does error
     test_values = [
@@ -254,10 +256,12 @@ def test_advanced_warn_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 3")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
+def test_advanced_warn_and_crit_threshold_occurrences(caplog, cache_dir):
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -271,11 +275,6 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
-    # Clear down any previous state files that might exist
-    # delete the directory
-    if os.path.exists(test_check.SENSU_CACHE_DIR):
-        shutil.rmtree(test_check.SENSU_CACHE_DIR)
-
     # Run the check once, check that it doesnt error
 
     test_values = [
@@ -287,7 +286,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 1")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Run the checks a second time, also check it doesnt error
     test_values = [
@@ -299,7 +298,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 2")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Run the check a 3rd time and check that it does error for the major threshold
     test_values = [
@@ -311,7 +310,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 3")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Now we alter the current value to 11, so we are breaching the critical threshold
     # We should continue to get a major alert, until the critical threshold is breached 3 times
@@ -326,7 +325,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 4")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Run the 5th time and check still get Major
     test_values = [
@@ -338,7 +337,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 5")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Now the critical threshold has had 3 occurrences, so its the last time it will be just Major
 
@@ -352,7 +351,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 6")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Final run, we should get just a critical alert, with the updated output message
     test_values = [
@@ -364,10 +363,12 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 7")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_threshold_time(caplog, tmpdir):
+def test_advanced_warn_threshold_time(caplog, cache_dir):
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -379,11 +380,6 @@ def test_advanced_warn_threshold_time(caplog, tmpdir):
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
-    # Clear down any previous state files that might exist
-    # delete the directory
-    if os.path.exists(test_check.SENSU_CACHE_DIR):
-        shutil.rmtree(test_check.SENSU_CACHE_DIR)
-
     # Run the check once, check that it doesnt error
     test_values = [
         {
@@ -394,7 +390,7 @@ def test_advanced_warn_threshold_time(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 1")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Sleep for 5 seconds
     time.sleep(5)
@@ -409,10 +405,12 @@ def test_advanced_warn_threshold_time(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 2")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_and_crit_threshold_time(caplog, tmpdir):
+def test_advanced_warn_and_crit_threshold_time(caplog, cache_dir):
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -426,11 +424,6 @@ def test_advanced_warn_and_crit_threshold_time(caplog, tmpdir):
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
-    # Clear down any previous state files that might exist
-    # delete the directory
-    if os.path.exists(test_check.SENSU_CACHE_DIR):
-        shutil.rmtree(test_check.SENSU_CACHE_DIR)
-
     # Run the check once, check that it doesnt error
 
     test_values = [
@@ -442,7 +435,7 @@ def test_advanced_warn_and_crit_threshold_time(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 1")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Sleep for 5 seconds
     time.sleep(5)
@@ -457,7 +450,7 @@ def test_advanced_warn_and_crit_threshold_time(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 2")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # We should continue to get a major alert, until the critical threshold has been breached for 10 seconds
     time.sleep(2)
@@ -472,7 +465,7 @@ def test_advanced_warn_and_crit_threshold_time(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 3")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # We should continue to get a major alert, until the critical threshold has been breached for 10 seconds
     time.sleep(5)
@@ -487,13 +480,15 @@ def test_advanced_warn_and_crit_threshold_time(caplog, tmpdir):
         },
     ]
     logging.info("Testing occurrence 4")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
 @freeze_time("2022-05-04 15:00:00")
-def test_basic_warn_threshold_with_exclude_period(caplog, tmpdir):
+def test_basic_warn_threshold_with_exclude_period(caplog, cache_dir):
     logging.info(f"Current time is {datetime.datetime.now()}")
 
+    test_check = SensuPluginCheck()
+    test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
     kwargs = {}
     metadata = dict()
@@ -518,7 +513,7 @@ def test_basic_warn_threshold_with_exclude_period(caplog, tmpdir):
         },
     ]
     logging.info("Running first test, inside exclusion period")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
     # Alter the threshold so that we're outside the exclusion period
     kwargs["exclude_times"] = [
@@ -538,10 +533,10 @@ def test_basic_warn_threshold_with_exclude_period(caplog, tmpdir):
     ]
 
     logging.info("Running second test, outside of exclusion period")
-    run_process_value_check(test_values, ">=")
+    run_process_value_check(test_values, test_check, ">=")
 
 
-def run_process_value_check(test_values, operator, check_alert_key=False):
+def run_process_value_check(test_values, test_check, operator, check_alert_key=False):
     for test_value in test_values:
         current_value = test_value["current_value"]
         id = test_value["alert_key"] if "alert_key" in test_value else None

@@ -167,12 +167,7 @@ class SensuPluginCheck(SensuPlugin):
                 return None
 
             # Now do the actual threshold checking
-
-            status_file_dir = (
-                self.SENSU_CACHE_DIR
-                if "SENSU_CACHE_DIR" not in os.environ
-                else os.environ["SENSU_CACHE_DIR"]
-            ) + "/alert_status_cache"
+            status_file_dir = f"{self.SENSU_CACHE_DIR}/alert_status_cache"
 
             # Check whether this is an X in Y threshold and determine whether we are already inside, or
             # if this ocurrence will trigger that
