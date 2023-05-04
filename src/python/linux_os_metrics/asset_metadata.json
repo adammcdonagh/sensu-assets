@@ -5,6 +5,7 @@
   "type": "python",
   "python_version": "3.9.10",
   "requirements": [],
+  "runtime": "vanilla",
   "test_command": "python both_cpu_utilisation.py --help",
   "systems": [
     {

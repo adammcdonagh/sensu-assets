@@ -6,6 +6,7 @@
   "python_version": "3.9.10",
   "requirements": [],
   "test_command": "python example.py",
+  "runtime": "vanilla",
   "systems": [
     {
       "os": "linux",

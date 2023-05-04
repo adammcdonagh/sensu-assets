@@ -4,6 +4,7 @@
   "version": "1.0",
   "type": "python",
   "python_version": "3.9.10",
+  "runtime": "with_requests_boto3",
   "requirements": [
     "boto3"
   ],
