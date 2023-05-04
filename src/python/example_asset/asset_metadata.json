@@ -4,7 +4,9 @@
   "version": "1.0",
   "type": "python",
   "python_version": "3.9.10",
-  "requirements": [],
+  "requirements": [
+    "bofhexcuse"
+  ],
   "test_command": "python example.py",
   "systems": [
     {
