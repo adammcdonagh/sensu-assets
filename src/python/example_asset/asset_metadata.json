@@ -8,7 +8,7 @@
     "bofhexcuse"
   ],
   "runtime": "vanilla",
-  "test_command": "python example.py",
+  "test_command": "example.py",
   "systems": [
     {
       "os": "linux",

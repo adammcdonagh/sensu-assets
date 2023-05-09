@@ -5,7 +5,7 @@
   "type": "python",
   "python_version": "3.9.10",
   "requirements": [],
-  "test_command": "python example.py",
+  "test_command": "example.py",
   "runtime": "vanilla",
   "systems": [
     {

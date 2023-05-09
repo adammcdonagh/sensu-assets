@@ -9,7 +9,7 @@
   "requires_assets": [
     "core/sensu_plugin"
   ],
-  "test_command": "python both_cpu_utilisation.py --help",
+  "test_command": "both_cpu_utilisation.py --help",
   "systems": [
     {
       "os": "linux",
