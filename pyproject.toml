@@ -1,2 +1,15 @@
 [tool.isort]
 profile = 'black'
+
+[tool.pylint."LOGGING"]
+disable=[
+  "logging-fstring-interpolation"
+]
+
+[tool.pylint."BASE"]
+disable=[
+  "invalid-name",
+  "missing-module-docstring",
+  "missing-function-docstring",
+  "line-too-long" # black takes care of this
+]
