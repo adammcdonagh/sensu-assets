@@ -1,6 +1,9 @@
 [tool.isort]
 profile = 'black'
 
+[tool.pylint."MASTER"]
+init-hook='import sys; sys.path.append("src/python/sensu_plugin/lib")'
+
 [tool.pylint."LOGGING"]
 disable=[
   "logging-fstring-interpolation"
@@ -8,8 +11,8 @@ disable=[
 
 [tool.pylint."BASE"]
 disable=[
-  "invalid-name",
-  "missing-module-docstring",
-  "missing-function-docstring",
   "line-too-long" # black takes care of this
+]
+good-names=[
+  "rc"
 ]

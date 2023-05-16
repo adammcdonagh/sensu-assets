@@ -18,6 +18,31 @@
       "env": {
         "PYTHONPATH": "src/python/sensu_plugin/lib"
       }
-    }
+    },
+    {
+      "name": "Python: Handler SQS (openstack)",
+      "type": "python",
+      "request": "launch",
+      "program": "src/python/handler_sqs/handler_sqs.py",
+      "preLaunchTask": "Start localstack",
+      "console": "integratedTerminal",
+      "args": [
+        "-t",
+        "sensu-alerts",
+        "-q",
+        "sensu-alerts",
+        "-v",
+        "<",
+        "test/test-event-crit.json"
+      ],
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "src/python/sensu_plugin/lib",
+        "AWS_ENDPOINT_URL": "http://localhost:4566",
+        "AWS_ACCESS_KEY_ID": "local",
+        "AWS_SECRET_ACCESS_KEY": "local",
+        "AWS_DEFAULT_REGION": "eu-west-2",
+      }
+    },
   ]
 }

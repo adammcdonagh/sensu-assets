@@ -10,4 +10,5 @@
   "python.analysis.extraPaths": [
     "src/python/sensu_plugin/lib"
   ],
+  "python.analysis.typeCheckingMode": "off",
 }

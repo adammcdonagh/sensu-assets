@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+Sensu Handler for pushing events into
+an SQS queue for processing
+"""
 
 import argparse
 import json
@@ -10,6 +14,7 @@ import time
 from copy import deepcopy
 
 import boto3
+from sensu_plugin.logging import init_logging, write_log_file
 
 # This script handles incoming events from Sensu, processes them based on severity and previous state (stored in DynamoDB)
 # and forwards them to an SQS queue
@@ -17,7 +22,15 @@ DEFAULT_TTL = 120 * 60  # 2hrs
 SEVERITY_MAP = {"Clear": 9, "Minor": 3, "Major": 4, "Critical": 5}
 
 
-def put_event_in_db(ddb_table, alert_key, alert_attributes):
+def put_event_in_db(ddb_table, alert_key: str, alert_attributes: dict) -> dict:
+    """
+    Put the event in DynamoDB
+
+    :param ddb_table: DynamoDB table object
+    :param alert_key: Alert key
+    :param alert_attributes: Alert attributes
+    :return: Result of the put_item call
+    """
     result = ddb_table.put_item(
         Item={
             "alert_key": alert_key,
@@ -31,7 +44,15 @@ def put_event_in_db(ddb_table, alert_key, alert_attributes):
     return result
 
 
-def send_to_sqs(sqs_queue, alert_key, alert_attributes):
+def send_to_sqs(sqs_queue, alert_key: str, alert_attributes: dict) -> dict:
+    """
+    Send the event to SQS
+
+    :param sqs_queue: SQS queue object
+    :param alert_key: Alert key
+    :param alert_attributes: Alert attributes
+    :return: Result of the send_message call
+    """
     mapped_severity = SEVERITY_MAP[alert_attributes["severity"]]
     # Construct the message
     message_body = {
@@ -53,6 +74,12 @@ def send_to_sqs(sqs_queue, alert_key, alert_attributes):
 
 
 def main() -> int:
+    """
+    Main function
+
+    :return: 0 on success, 1 on failure
+    """
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -85,13 +112,6 @@ def main() -> int:
         help="SQS queue to send events to",
     )
 
-    parser.add_argument(
-        "-e",
-        "--endpoint_url",
-        required=False,
-        help="alternative endpoint url for AWS API calls",
-    )
-
     # Strip out any proxy settings from the environment
     os.environ["HTTP_PROXY"] = ""
     os.environ["HTTPS_PROXY"] = ""
@@ -113,25 +133,22 @@ def main() -> int:
         logging.getLogger("urllib3").setLevel(logging.DEBUG)
 
     # Parse event data from STDIN
-    stdin_event = ""
-    for line in sys.stdin:
-        stdin_event += line
+    stdin_event = "".join(sys.stdin.readlines())
 
     # Write STDIN to /tmp
-    with open("/tmp/event.json", "w") as fh:
-        fh.write(stdin_event)
+    with open("/tmp/event.json", "w", encoding="utf-8") as file_handle:
+        file_handle.write(stdin_event)
 
     # Parse the event into JSON format
     json_object = json.loads(stdin_event)
 
-    # Setup a boto3 client
-    def set_connection_header(request, operation_name, **kwargs):
-        request.headers["Connection"] = "keep-alive"
+    aws_endpoint_url = os.environ.get("AWS_ENDPOINT_URL", None)
 
-    ddb = session.resource("dynamodb", endpoint_url=args.endpoint_url)
+    # Setup a boto3 client
+    ddb = session.resource("dynamodb", endpoint_url=aws_endpoint_url)
     ddb_table = ddb.Table(args.dynamodb_table)
 
-    sqs = session.resource("sqs", endpoint_url=args.endpoint_url)
+    sqs = session.resource("sqs", endpoint_url=aws_endpoint_url)
     sqs_queue = sqs.get_queue_by_name(QueueName=args.sqs_queue)
 
     # Pull our the raw check output
@@ -172,7 +189,7 @@ def main() -> int:
         graphite_line_match = graphite_line_pattern.match(check_line)
         keepalive_ok_line_match = keepalive_ok_line_pattern.match(check_line)
 
-        alert_attributes = dict()
+        alert_attributes = {}
 
         # Ignore blank lines
         if check_line == "":
@@ -277,8 +294,7 @@ def main() -> int:
             and "ttl" not in alert_attributes
         ):
             ttl = alert_attributes["interval"] * 3
-        if ttl < 10:
-            ttl = 10
+        ttl = max(ttl, 10)
         alert_attributes["ttl"] = ttl
 
         logging.debug(f"Alert attributes: {alert_attributes}")
@@ -340,20 +356,18 @@ def main() -> int:
             logging.debug(send_response)
 
         logging.debug("")
+    return 0
 
 
-logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
-logging.getLogger("boto3").setLevel(logging.WARNING)
-logging.getLogger("botocore").setLevel(logging.WARNING)
-logging.getLogger("nose").setLevel(logging.WARNING)
-logging.getLogger("s3transfer").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+if __name__ == "__main__":
+    logging.getLogger("boto3").setLevel(logging.WARNING)
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("nose").setLevel(logging.WARNING)
+    logging.getLogger("s3transfer").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-logging.addLevelName(5, "VERBOSE")
-
-start_time = round(time.time() * 1000)
-rc = main()
-end_time = round(time.time() * 1000)
-with open("/tmp/sensu_to_sqs.log", "a") as f:
-    f.write(f"{end_time - start_time} ms\n")
-sys.exit(rc)
+    start_time = round(time.time() * 1000)
+    RC = main()
+    end_time = round(time.time() * 1000)
+    write_log_file(f"{end_time - start_time} ms")
+    sys.exit(RC)

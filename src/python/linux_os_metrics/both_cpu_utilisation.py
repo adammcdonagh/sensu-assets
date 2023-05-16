@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-
+"""
+    Basic script to collect CPU metrics on Linux systems 
+    and generate alerts or metric output for Sensu
+"""
 import argparse
 import json
 import logging
@@ -107,7 +110,7 @@ class LinuxCPUMetrics(SensuPluginCheck):
             elif warn_time_period == "m":
                 warn_time_seconds = int(warn_time) * 60
 
-            metadata = dict()
+            metadata = {}
             metadata["alert_type"] = alert_type
 
             threshold = Threshold(
@@ -138,7 +141,7 @@ class LinuxCPUMetrics(SensuPluginCheck):
             elif crit_time_period == "m":
                 crit_time_seconds = int(crit_time) * 60
 
-            metadata = dict()
+            metadata = {}
             metadata["alert_type"] = alert_type
 
             threshold = Threshold(
@@ -153,13 +156,13 @@ class LinuxCPUMetrics(SensuPluginCheck):
 
         # Handle any threshold overrides
         if os.path.exists(self.options.thresholds_file):
-            with open(self.options.thresholds_file) as file:
+            with open(self.options.thresholds_file, encoding="utf-8") as file:
                 json_file = json.load(file)
                 for threshold in json_file:
                     logging.debug(threshold)
                     # Create threshold object
                     kwargs = {}
-                    metadata = dict()
+                    metadata = {}
 
                     if "warn_threshold" in threshold:
                         groups = ALERT_TYPE_REGEX.match(

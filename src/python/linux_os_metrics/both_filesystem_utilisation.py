@@ -4,8 +4,10 @@ import argparse
 import json
 import logging
 import os
+import platform
 import re
 import shutil
+import subprocess
 
 from sensu_plugin import SensuPluginCheck, Threshold
 
@@ -88,7 +90,9 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
 
     def run(self):
         if self.options.verbose:
-            logging.getLogger().setLevel(logging.DEBUG)
+            self.logger.setLevel(logging.DEBUG)
+
+        self.logger.debug("Running LinuxFilesystemMetrics")
 
         # this method is called to perform the actual check
 
@@ -159,42 +163,58 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
         rc = 0
         result_message = "Check ran OK"
 
-        with open("/proc/mounts", "r") as f:
-            for line in f.readlines():
-                _, mount_point, filesystem_type, _ = line.split(" ", maxsplit=3)
-                if re.match(r"(ext[0-9]|zfs)", filesystem_type):
-                    total, used, free = shutil.disk_usage(mount_point)
-                    used_percent = used / (free + used) * 100
+        # Determine the OS
+        mounts = []
+        filesystem_column_index = 0
+        if platform.system() == "Linux":
+            filesystem_column_index = 2
+            with open("/proc/mounts", "r", encoding="utf-8") as f:
+                mounts = f.readlines()
+        elif platform.system() == "Darwin":
+            filesystem_column_index = 3
+            mounts = (
+                subprocess.run(["mount"], stdout=subprocess.PIPE, check=True)
+                .stdout.decode("utf-8")
+                .splitlines()
+            )
 
-                    if not self.options.check_only or self.options.metrics_only:
-                        self.output_metrics(
-                            [f"os.filesystem.used_bytes;filesystem={mount_point}", used]
-                        )
-                        self.output_metrics(
-                            [f"os.filesystem.free_bytes;filesystem={mount_point}", free]
-                        )
-                        self.output_metrics(
-                            [
-                                f"os.filesystem.used_percent;filesystem={mount_point}",
-                                used_percent,
-                            ]
-                        )
+        for line in mounts:
+            line_split = line.split(" ", maxsplit=3)
+            mount_point = line_split[0]
+            filesystem_type = line_split[filesystem_column_index]
+            if re.search(r"(ext[0-9]|zfs|apfs)", filesystem_type):
+                _, used, free = shutil.disk_usage(mount_point)
+                used_percent = used / (free + used) * 100
 
-                    if not self.options.metrics_only or self.options.check_only:
-                        # Determine thresholds
-                        # Pass to threshold handler
-                        threshold_result = self.process_value(
-                            mount_point,
+                if not self.options.check_only or self.options.metrics_only:
+                    self.output_metrics(
+                        [f"os.filesystem.used_bytes;filesystem={mount_point}", used]
+                    )
+                    self.output_metrics(
+                        [f"os.filesystem.free_bytes;filesystem={mount_point}", free]
+                    )
+                    self.output_metrics(
+                        [
+                            f"os.filesystem.used_percent;filesystem={mount_point}",
                             used_percent,
-                            ok_message=f"Filesystem usage for {mount_point} is OK ({used_percent:.3g}::ALERT_TYPE:: used)",
-                            alert_message=f"Filesystem usage for {mount_point} > ::THRESHOLD::::ALERT_TYPE:: ({used_percent:.3g}::ALERT_TYPE:: used)",
-                            alert_type="%",
-                        )
-                        result_message, rc = self.process_output_and_rc(
-                            threshold_result,
-                            result_message,
-                            "Some filesystems exceed the threshold",
-                        )
+                        ]
+                    )
+
+                if not self.options.metrics_only or self.options.check_only:
+                    # Determine thresholds
+                    # Pass to threshold handler
+                    threshold_result = self.process_value(
+                        mount_point,
+                        used_percent,
+                        ok_message=f"Filesystem usage for {mount_point} is OK ({used_percent:.3g}::ALERT_TYPE:: used)",
+                        alert_message=f"Filesystem usage for {mount_point} > ::THRESHOLD::::ALERT_TYPE:: ({used_percent:.3g}::ALERT_TYPE:: used)",
+                        alert_type="%",
+                    )
+                    result_message, rc = self.process_output_and_rc(
+                        threshold_result,
+                        result_message,
+                        "Some filesystems exceed the threshold",
+                    )
 
         self.return_final_output(rc, result_message)
 

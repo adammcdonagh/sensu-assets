@@ -2,7 +2,6 @@
 
 import argparse
 import atexit
-import logging
 import os
 import platform
 import sys
@@ -10,28 +9,21 @@ import time
 import traceback
 from collections import namedtuple
 
-from sensu_plugin.customformatter import CustomFormatter
+from sensu_plugin.asset import SensuAsset
 from sensu_plugin.exithook import ExitHook
 
 # create a namedtuple of all valid exit codes
 ExitCode = namedtuple("ExitCode", ["OK", "WARNING", "CRITICAL", "UNKNOWN"])
 
 
-class SensuPlugin(object):
+class SensuPlugin(SensuAsset):
     """
     Base class used by both checks and metrics plugins.
     """
 
     def __init__(self, autorun=True):
-        logging.basicConfig(level=logging.INFO)
-
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-
-        ch.setFormatter(CustomFormatter())
-
-        handlers = logging.getLogger().handlers
-        handlers[0].setFormatter(CustomFormatter())
+        # Call super class which will sort out the logging
+        super().__init__()
 
         # Determine the CACHE_DIR based on the platform, unless its overridden in the environment
         if os.environ.get("SENSU_CACHE_DIR"):
