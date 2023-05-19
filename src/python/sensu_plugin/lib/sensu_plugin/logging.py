@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Simple logging module for the Sensu plugin
+"""Simple logging module for the Sensu plugin.
+
 This includes the ability to write to a log file using an
 environment variable named SENSU_ASSET_LOG_FILE_PATH
 """
@@ -13,8 +13,7 @@ ASSET_LOG = "asset-log"
 
 
 class CustomFormatter(logging.Formatter):
-    """
-    Custom formatter for the Sensu plugin
+    """Custom formatter for the Sensu plugin.
 
     This will colorize the output based on the log level
 
@@ -34,13 +33,14 @@ class CustomFormatter(logging.Formatter):
 
     FORMATS = {
         logging.DEBUG: light_blue + LOG_FORMAT + reset,
-        logging.INFO: grey + LOG_FORMAT + reset,
+        logging.INFO: LOG_FORMAT,
         logging.WARNING: yellow + LOG_FORMAT + reset,
         logging.ERROR: red + LOG_FORMAT + reset,
         logging.CRITICAL: blink_red + LOG_FORMAT + reset,
     }
 
     def format(self, record):
+        """Format the log message."""
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
@@ -48,7 +48,7 @@ class CustomFormatter(logging.Formatter):
 
 def init_logging(name: str, log_level: str = logging.INFO):
     """
-    Initialize logging for the script
+    Initialize logging for the script.
 
     Args:
         name (str): The name of the logger
@@ -63,6 +63,9 @@ def init_logging(name: str, log_level: str = logging.INFO):
         logging.basicConfig(
             level=logging.INFO,
         )
+
+        # Remove all existing handlers from the root logger
+        logging.getLogger().handlers = []
 
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(formatter)
@@ -84,7 +87,7 @@ def init_logging(name: str, log_level: str = logging.INFO):
         if valid_log_file_path:
             handler = logging.FileHandler(log_file_path)
             handler.setFormatter(formatter)
-            asset_log.addHandler()
+            asset_log.addHandler(handler)
 
     return logging.getLogger(f"{name}")
 
@@ -92,11 +95,14 @@ def init_logging(name: str, log_level: str = logging.INFO):
 def _check_log_file_path(log_file_path: str):
     if log_file_path:
         # If the path is defined, and we can write to that path
-        if os.path.isdir(os.path.dirname(log_file_path)):
+        if not os.path.isdir(os.path.dirname(log_file_path)):
             # We don't want to kill the script if the log file can't be written to. instead we just write to stderr
             print(f"ERROR: {log_file_path} is not a directory", file=stderr)
             return False
-        if not os.access(log_file_path, os.W_OK):
+        if (
+            not os.path.exists(log_file_path)
+            and not os.access(os.path.dirname(log_file_path), os.W_OK)
+        ) or (os.path.exists(log_file_path) and not os.access(log_file_path, os.W_OK)):
             print(f"ERROR: {log_file_path} is not writable", file=stderr)
             return False
         return True
@@ -105,7 +111,7 @@ def _check_log_file_path(log_file_path: str):
 
 def write_log_file(log_message: str):
     """
-    Write a log message to the log file
+    Write a log message to the log file.
 
     Args:
         log_message (str): The message to write to the log file
