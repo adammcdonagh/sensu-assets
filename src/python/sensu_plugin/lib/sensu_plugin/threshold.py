@@ -11,8 +11,8 @@ from dataclasses import dataclass, field
 from typing import Pattern
 
 import humanize
-from sensu_plugin import init_logging
 from sensu_plugin.check_result import CheckResultMetadata
+from sensu_plugin.logging import init_logging
 
 logger = init_logging(__name__)
 TIME_PERIOD_REGEX: Pattern = re.compile(r"(\d+)(h|m)")
@@ -34,7 +34,7 @@ class ThresholdResult:
 
 
 @dataclass
-class Threshold:  # noqa: PLR902
+class Threshold:  # pylint: disable=too-many-instance-attributes
     """A class to represent a Sensu threshold.
 
     This generic class can be used to define complex thresholds, ranging from a simple
@@ -55,7 +55,7 @@ class Threshold:  # noqa: PLR902
         operator (str): The operator to use for the comparison, defaults to ">="
     """
 
-    id: str = None  # noqa: PLC103
+    id: str = None  # pylint: disable=invalid-name
     warn_threshold: int = None
     crit_threshold: int = None
     team: str = None
@@ -90,7 +90,7 @@ class Threshold:  # noqa: PLR902
 
         return "Unknown"
 
-    def evaluate_threshold(  # noqa: PLR914 # for the sake of readability
+    def evaluate_threshold(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
         self,
         threshold_id: int,
         current_value: int | str,
@@ -353,7 +353,7 @@ class Threshold:  # noqa: PLR902
             occurrences,
         )
 
-    def _handle_threshold_output(  # noqa: PLR912, PLR913, PLR914
+    def _handle_threshold_output(  # pylint: disable=too-many-arguments,too-many-branches
         self,
         has_output: bool,
         threshold: str,
@@ -368,7 +368,7 @@ class Threshold:  # noqa: PLR902
     ) -> tuple:
         # Only allow one output per threshold
         suppress_alert = False
-        if not has_output:  # noqa: PLR702
+        if not has_output:  # pylint: disable=too-many-nested-blocks
             #  Now check for any occurrence or time based conditions before outputting
             first_occurrence = True
             if self.metadata and "alert_cache" in self.metadata:

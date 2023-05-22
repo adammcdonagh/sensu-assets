@@ -4,15 +4,28 @@ profile = 'black'
 [tool.pylint."MASTER"]
 init-hook='import sys; sys.path.append("src/python/sensu_plugin/lib")'
 
+
 [tool.pylint."LOGGING"]
 disable=[
   "logging-fstring-interpolation"
 ]
 
+[tool.pylint."IMPORTS"]
+disable=[
+  "import-error"
+]
+
 [tool.pylint."BASE"]
 disable=[
-  "line-too-long" # black takes care of this
+  "line-too-long", # black takes care of this
 ]
+
+[tool.pylint."SIMILARITY"]
+min-similarity-lines = 50
+
+[tool.pylint."DESIGN"]
+max-locals=20
+
 good-names=[
   "rc"
 ]

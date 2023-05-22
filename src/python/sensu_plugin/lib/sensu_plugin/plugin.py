@@ -23,10 +23,10 @@ ExitCode = namedtuple("ExitCode", ["OK", "WARNING", "CRITICAL", "UNKNOWN"])
 
 
 @dataclass
-class SensuPlugin(SensuAsset):  # noqa: PLR902
+class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
     """Base class used by both checks and metrics plugins."""
 
-    SENSU_CACHE_DIR: str  # noqa: PLC103
+    SENSU_CACHE_DIR: str  # pylint: disable=invalid-name
     plugin_info: dict
     parser: argparse.ArgumentParser
     options: argparse.Namespace
@@ -140,7 +140,7 @@ class SensuPlugin(SensuAsset):  # noqa: PLR902
                 team_msg = f"TEAM:{kwargs['team']} " if "team" in kwargs else ""
                 source_msg = f"SOURCE:{kwargs['source']} " if "source" in kwargs else ""
 
-                self.output(  # noqa: PLE123
+                self.output(  # pylint: disable=unexpected-keyword-arg
                     args, severity=severity_msg, team=team_msg, source=source_msg
                 )
             if "exit" in kwargs and kwargs["exit"]:

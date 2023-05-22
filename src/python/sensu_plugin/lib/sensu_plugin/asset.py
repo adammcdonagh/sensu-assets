@@ -10,7 +10,7 @@ import os
 from sensu_plugin.logging import init_logging
 
 
-class SensuAsset:  # noqa: PLR903
+class SensuAsset:  # pylint: disable=too-few-public-methods
     """Base class used by plugins and handlers.
 
     The base class will always initialise the custom logger
