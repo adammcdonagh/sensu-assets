@@ -46,7 +46,7 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def init_logging(name: str, log_level: str = logging.INFO):
+def init_logging(name: str, log_level: str = logging.INFO) -> None:
     """
     Initialize logging for the script.
 
@@ -92,7 +92,7 @@ def init_logging(name: str, log_level: str = logging.INFO):
     return logging.getLogger(f"{name}")
 
 
-def _check_log_file_path(log_file_path: str):
+def _check_log_file_path(log_file_path: str) -> bool:
     if log_file_path:
         # If the path is defined, and we can write to that path
         if not os.path.isdir(os.path.dirname(log_file_path)):

@@ -10,14 +10,10 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+  - repo: local
     hooks:
       - id: flake8
-        additional_dependencies:
-          - flake8-bugbear
-          - pep8-naming
-          - flake8-use-fstring
-          - flake8-isort
-          - flake8-pylint
-          - flake8-docstrings
+        name: flake8
+        entry: flake8
+        language: system
+        types: [python]

@@ -79,7 +79,7 @@ class SensuPlugin(SensuAsset):  # noqa: PLR902
         if autorun:
             self.run()
 
-    def sanitise_arguments(self, args):
+    def sanitise_arguments(self, args) -> tuple:
         """Validate arguments.
 
         Checks whether the arguments have been passed by a dynamic status code
@@ -105,11 +105,11 @@ class SensuPlugin(SensuAsset):  # noqa: PLR902
 
         return args
 
-    def output(self, args):
+    def output(self, args) -> None:
         """Print the output message."""
         print(f"SensuPlugin: {' '.join(str(a) for a in args)}")
 
-    def output_metrics(self, args):
+    def output_metrics(self, args) -> None:
         """Print the output message."""
         # sanitise the arguments
         args = self.sanitise_arguments(args)
@@ -127,7 +127,7 @@ class SensuPlugin(SensuAsset):  # noqa: PLR902
     def __make_dynamic(self, method):
         """Create a method for each of the exit codes."""
 
-        def dynamic(*args, **kwargs):
+        def dynamic(*args, **kwargs) -> None:
             self.plugin_info["status"] = method
             if not args:
                 args = None
@@ -151,7 +151,7 @@ class SensuPlugin(SensuAsset):  # noqa: PLR902
         dynamic.__name__ = method_lc
         setattr(self, dynamic.__name__, dynamic)
 
-    def run(self):
+    def run(self) -> None:
         """Method should be overwritten by inherited classes."""  # noqa: D401
         self.warning("Not implemented! You should override SensuPlugin.run()")
 
