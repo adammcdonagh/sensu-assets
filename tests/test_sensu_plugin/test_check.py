@@ -18,21 +18,22 @@ init_logging(__name__)
 
 
 @pytest.fixture(scope="function")
-def cache_dir(tmpdir):
+def cache_dir(tmpdir):  # type: ignore[no-untyped-def]
     """Set the cache dir to a temporary directory."""
     os.environ["SENSU_CACHE_DIR"] = tmpdir.strpath
 
 
-def test_basic_warn_threshold(caplog, cache_dir):
+def test_basic_warn_threshold(caplog: pytest.LogCaptureFixture, cache_dir: str) -> None:
     """Test basic warn threshold outputs."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["warn_threshold"] = 5
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "warn_threshold": 5,
+        "team": "Test",
+    }
+
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -88,17 +89,19 @@ def test_basic_warn_threshold(caplog, cache_dir):
     run_process_value_check(test_values, test_check, ">=")
 
 
-def test_basic_warn_with_crit_threshold(caplog, cache_dir):
+def test_basic_warn_with_crit_threshold(
+    caplog: pytest.LogCaptureFixture, cache_dir: str
+) -> None:
     """Test basic warn with a critical threshold outputs."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["warn_threshold"] = 5
-    kwargs["crit_threshold"] = 10
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "warn_threshold": 5,
+        "crit_threshold": 10,
+        "team": "Test",
+    }
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -154,7 +157,7 @@ def test_basic_warn_with_crit_threshold(caplog, cache_dir):
     run_process_value_check(test_values, test_check, ">=")
 
     # Redefine the threshold with a higher min severity to check rc 2 return codes
-    kwargs["metadata"] = metadata
+    kwargs["metadata"] = {}
     kwargs["warn_threshold"] = 5
     kwargs["crit_threshold"] = 10
     kwargs["min_severity"] = "Major"
@@ -186,18 +189,19 @@ def test_basic_warn_with_crit_threshold(caplog, cache_dir):
     run_process_value_check(test_values, test_check, ">=")
 
 
-def test_basic_crit_threshold(caplog, cache_dir):
+def test_basic_crit_threshold(caplog: pytest.LogCaptureFixture, cache_dir: str) -> None:
     """Test basic crit threshold with min severity of Major."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["min_severity"] = "Major"
-    kwargs["warn_threshold"] = 5
-    kwargs["crit_threshold"] = 10
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "min_severity": "Major",
+        "warn_threshold": 5,
+        "crit_threshold": 10,
+        "team": "Test",
+    }
+
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -213,18 +217,20 @@ def test_basic_crit_threshold(caplog, cache_dir):
     run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_threshold_occurrences(caplog, cache_dir):
+def test_advanced_warn_threshold_occurrences(
+    caplog: pytest.LogCaptureFixture, cache_dir: str
+) -> None:
     """Test advanced warn threshold with number of occurrences."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["min_severity"] = "Major"
-    kwargs["warn_threshold"] = 5
-    kwargs["warn_occurrences"] = 2
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "min_severity": "Major",
+        "warn_threshold": 5,
+        "warn_occurrences": 2,
+        "team": "Test",
+    }
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -265,20 +271,22 @@ def test_advanced_warn_threshold_occurrences(caplog, cache_dir):
     run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_and_crit_threshold_occurrences(caplog, cache_dir):
+def test_advanced_warn_and_crit_threshold_occurrences(
+    caplog: pytest.LogCaptureFixture, cache_dir: str
+) -> None:
     """Test advanced warn and critical threshold with number of occurrences."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["min_severity"] = "Major"
-    kwargs["warn_threshold"] = 5
-    kwargs["crit_threshold"] = 11
-    kwargs["warn_occurrences"] = 2
-    kwargs["crit_occurrences"] = 3
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "min_severity": "Major",
+        "warn_threshold": 5,
+        "crit_threshold": 11,
+        "warn_occurrences": 2,
+        "crit_occurrences": 3,
+        "team": "Test",
+    }
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -373,18 +381,20 @@ def test_advanced_warn_and_crit_threshold_occurrences(caplog, cache_dir):
     run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_threshold_time(caplog, cache_dir):
+def test_advanced_warn_threshold_time(
+    caplog: pytest.LogCaptureFixture, cache_dir: str
+) -> None:
     """Test advanced warn threshold with time."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["min_severity"] = "Major"
-    kwargs["warn_threshold"] = 5
-    kwargs["warn_time_seconds"] = 5
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "min_severity": "Major",
+        "warn_threshold": 5,
+        "warn_time_seconds": 5,
+        "team": "Test",
+    }
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -402,7 +412,7 @@ def test_advanced_warn_threshold_time(caplog, cache_dir):
         run_process_value_check(test_values, test_check, ">=")
 
         # Advance time by 5 seconds
-        frozen_datetime.tick(5)
+        frozen_datetime.tick(datetime.timedelta(seconds=5))
 
         # Run the checks a second time, also check it errors
         test_values = [
@@ -417,20 +427,23 @@ def test_advanced_warn_threshold_time(caplog, cache_dir):
         run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_and_crit_threshold_time(caplog, cache_dir):
+def test_advanced_warn_and_crit_threshold_time(
+    caplog: pytest.LogCaptureFixture, cache_dir: str
+) -> None:
     """Test advanced warn and crit threshold with time."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["min_severity"] = "Major"
-    kwargs["warn_threshold"] = 5
-    kwargs["crit_threshold"] = 11
-    kwargs["warn_time_seconds"] = 5
-    kwargs["crit_time_seconds"] = 10
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "min_severity": "Major",
+        "warn_threshold": 5,
+        "crit_threshold": 11,
+        "warn_time_seconds": 5,
+        "crit_time_seconds": 10,
+        "team": "Test",
+    }
+
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -448,7 +461,7 @@ def test_advanced_warn_and_crit_threshold_time(caplog, cache_dir):
         run_process_value_check(test_values, test_check, ">=")
 
         # Skip 5 seconds
-        frozen_datetime.tick(5)
+        frozen_datetime.tick(datetime.timedelta(seconds=5))
 
         # Run the checks a second time, we should get a Major alert
         test_values = [
@@ -463,7 +476,7 @@ def test_advanced_warn_and_crit_threshold_time(caplog, cache_dir):
         run_process_value_check(test_values, test_check, ">=")
 
         # We should continue to get a major alert, until the critical threshold has been breached for 10 seconds
-        frozen_datetime.tick(2)
+        frozen_datetime.tick(datetime.timedelta(seconds=2))
 
         # Run the 3rd time and check we still get a Major alert
         test_values = [
@@ -478,7 +491,7 @@ def test_advanced_warn_and_crit_threshold_time(caplog, cache_dir):
         run_process_value_check(test_values, test_check, ">=")
 
         # We should continue to get a major alert, until the critical threshold has been breached for 10 seconds
-        frozen_datetime.tick(5)
+        frozen_datetime.tick(datetime.timedelta(seconds=5))
 
         # Run the 4th time and check we now get a Critical alert
         test_values = [
@@ -493,19 +506,21 @@ def test_advanced_warn_and_crit_threshold_time(caplog, cache_dir):
         run_process_value_check(test_values, test_check, ">=")
 
 
-def test_advanced_warn_threshold_x_in_y(caplog, cache_dir):
+def test_advanced_warn_threshold_x_in_y(
+    caplog: pytest.LogCaptureFixture, cache_dir: str
+) -> None:
     """Test advanced warn threshold with number of occurrences over a time period."""
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["min_severity"] = "Major"
-    kwargs["warn_threshold"] = 5
-    kwargs["warn_occurrences"] = 5
-    kwargs["warn_time_seconds"] = 6
-    kwargs["team"] = "Test"
+    kwargs = {
+        "metadata": {},
+        "min_severity": "Major",
+        "warn_threshold": 5,
+        "warn_occurrences": 5,
+        "warn_time_seconds": 6,
+        "team": "Test",
+    }
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -544,7 +559,7 @@ def test_advanced_warn_threshold_x_in_y(caplog, cache_dir):
             frozen_datetime.tick()
 
         # Advance the block by a further 6 seconds
-        frozen_datetime.tick(6)
+        frozen_datetime.tick(datetime.timedelta(seconds=6))
         # Now run the check again, check that it does error
         test_values = [
             {
@@ -559,23 +574,25 @@ def test_advanced_warn_threshold_x_in_y(caplog, cache_dir):
 
 
 @freeze_time("2022-05-04 15:00:00")
-def test_basic_warn_threshold_with_exclude_period(caplog, cache_dir):
+def test_basic_warn_threshold_with_exclude_period(
+    caplog: pytest.LogCaptureFixture, cache_dir: str
+) -> None:
     """Test basic warn threshold with exclude period."""
     logging.info(f"Current time is {datetime.datetime.now()}")
 
     test_check = SensuPluginCheck()
     test_check.test_mode = True
     caplog.set_level(logging.DEBUG)
-    kwargs = {}
-    metadata = {}
-    kwargs["metadata"] = metadata
-    kwargs["min_severity"] = "Major"
-    kwargs["warn_threshold"] = 5
-    kwargs["exclude_times"] = [
-        {"days_of_week": ["Wednesday"], "start_time": "10:00", "end_time": "16:00"}
-    ]
+    kwargs = {
+        "metadata": {},
+        "min_severity": "Major",
+        "warn_threshold": "5",
+        "exclude_times": [
+            {"days_of_week": ["Wednesday"], "start_time": "10:00", "end_time": "16:00"}
+        ],
+        "team": "Test",
+    }
 
-    kwargs["team"] = "Test"
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
@@ -612,7 +629,12 @@ def test_basic_warn_threshold_with_exclude_period(caplog, cache_dir):
     run_process_value_check(test_values, test_check, ">=")
 
 
-def run_process_value_check(test_values, test_check, operator, check_alert_key=False):
+def run_process_value_check(
+    test_values: list,
+    test_check: SensuPluginCheck,
+    operator: str,
+    check_alert_key: bool = False,
+) -> None:
     """Run the process_value check for the given test values."""
     for test_value in test_values:
         current_value = test_value["current_value"]
@@ -624,6 +646,7 @@ def run_process_value_check(test_values, test_check, operator, check_alert_key=F
             alert_message=f"Current value is {operator} ::THRESHOLD::",
         )
 
+        assert threshold_result is not None
         assert threshold_result.rc == test_value["expected_rc"]
         assert (
             threshold_result.result_messages[0]["message"]

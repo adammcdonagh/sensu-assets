@@ -6,10 +6,9 @@
 
 import re
 from dataclasses import dataclass
-from typing import List
 
+from sensu_plugin import SensuPlugin
 from sensu_plugin.check_result import CheckResultMetadata
-from sensu_plugin.plugin import SensuPlugin
 from sensu_plugin.threshold import Threshold, ThresholdResult
 
 
@@ -17,9 +16,9 @@ from sensu_plugin.threshold import Threshold, ThresholdResult
 class SensuPluginCheck(SensuPlugin):
     """Class that inherits from SensuPlugin."""
 
-    thresholds: List[Threshold]
+    thresholds: list[Threshold]
 
-    def __init__(self, thresholds: list[Threshold] = None, autorun: bool = True):
+    def __init__(self, thresholds: list[Threshold] | None = None, autorun: bool = True):
         """Initialise the SensuPluginCheck class.
 
         Args:
@@ -34,7 +33,7 @@ class SensuPluginCheck(SensuPlugin):
 
         SensuPlugin.__init__(self, autorun)
 
-    def check_name(self, name: str = None) -> str:
+    def check_name(self, name: str | None = None) -> str:
         """Check the plugin name and set it accordingly.
 
         Use name if specified, class name if not set.
@@ -49,7 +48,7 @@ class SensuPluginCheck(SensuPlugin):
             self.plugin_info["check_name"] = name
 
         if self.plugin_info["check_name"] is not None:
-            return self.plugin_info["check_name"]
+            return str(self.plugin_info["check_name"])
 
         return self.__class__.__name__
 
@@ -62,13 +61,13 @@ class SensuPluginCheck(SensuPlugin):
         """
         self.plugin_info["message"] = m
 
-    def output(  # pylint: disable=too-many-arguments
+    def output(  # pylint: disable=too-many-arguments # type: ignore[misc]
         self,
-        args: List[str] = None,
-        alert_key: str = None,
-        severity: str = None,
-        team: str = None,
-        source: str = None,
+        args: list[str] | None = None,
+        alert_key: str | None = None,
+        severity: str | None = None,
+        team: str | None = None,
+        source: str | None = None,
     ) -> None:
         """Generate and output the result of the plugin.
 
@@ -93,7 +92,7 @@ class SensuPluginCheck(SensuPlugin):
         msg = ""
         # If there's more than 1 string passed in, then we will join them together
         # This will ensure that stack traces for example only output a single line
-        if args is not None and not (args[0] is None and len(args) == 1):
+        if args is not None and not (len(args) == 1 and args[0] is None):
             msg = f": {' '.join(str(message) for message in args)}"
         else:
             msg = self.plugin_info["message"]
@@ -119,7 +118,7 @@ class SensuPluginCheck(SensuPlugin):
 
         print(output_text)
 
-    def return_final_output(self, rc: int, result_message: str):
+    def return_final_output(self, rc: int, result_message: str) -> None:
         """Handle the final output message of the plugin and call the exit function with the correct return code.
 
         This function is called once at the end of the plugin execution.
@@ -141,14 +140,14 @@ class SensuPluginCheck(SensuPlugin):
 
     def process_value(  # pylint: disable=too-many-arguments
         self,
-        alert_id: str,
-        current_value: str | int,
+        alert_id: str | None,
+        current_value: str | int | float,
         ok_message: str,
-        alert_message: str = None,
-        warn_message: str = None,
-        crit_message: str = None,
-        alert_type: str = None,
-    ) -> None:
+        alert_message: str,
+        warn_message: str | None = None,
+        crit_message: str | None = None,
+        alert_type: str | None = None,
+    ) -> ThresholdResult | None:
         """Process threshold values and return the appropriate message and exit code.
 
         This function does the body of the work for a SensuPluginCheck. It takes the current value
@@ -169,12 +168,13 @@ class SensuPluginCheck(SensuPlugin):
             PERIOD: The period of time that the threshold breached before triggering
 
         Args:
-            alert_id (str): The ID of the alert. This is used to identify the alert in the thresholds list
+            alert_id (str | None): The ID of the alert. This is used to identify the alert in the thresholds list
             current_value (str | int): The current value to be checked against the thresholds
             ok_message (str): The message to be returned if the current value is within the thresholds
             alert_message (str): The default templated message to return when the threshold is breached. This is used if no warn_message or crit_message is passed
-            warn_message (str): The templated message to return when the warn threshold is breached
-            crit_message (str): The templated message to return when the crit threshold is breached
+            warn_message (str | None): The templated message to return when the warn threshold is breached
+            crit_message (str | None): The templated message to return when the crit threshold is breached
+            alert_type (str | None): The type of alert that is being checked. This is used in the templated messages
         """
         # This will be the final object we return. Give it a default of 0 (OK) for now
 
@@ -217,15 +217,20 @@ class SensuPluginCheck(SensuPlugin):
             if result is None:
                 result = threshold_result
             else:
-                if threshold_result["rc"] > result["rc"]:
-                    result["rc"] = threshold_result["rc"]
+                if threshold_result and threshold_result.rc > result.rc:  # type: ignore[unreachable]
+                    result.rc = threshold_result.rc
 
-                result["result_messages"] += threshold_result["result_messages"]
+                if threshold_result:
+                    result.result_messages += threshold_result.result_messages
 
         return result
 
     def _format_messages(
-        self, ok_message: str, alert_message: str, warn_message: str, crit_message: str
+        self,
+        ok_message: str,
+        alert_message: str,
+        warn_message: str | None,
+        crit_message: str | None,
     ) -> tuple[str, str, str, str]:
         # Ensure we have all args we need
         if not ok_message:
@@ -258,7 +263,7 @@ class SensuPluginCheck(SensuPlugin):
         return ok_message, alert_message, warn_message, crit_message
 
     def get_thresholds(
-        self, alert_id: int = None, alert_type: str = None
+        self, alert_id: str | None = None, alert_type: str | None = None
     ) -> list[Threshold]:
         """Get a list of thresholds that match the given alert_id or alert_type.
 
@@ -285,7 +290,7 @@ class SensuPluginCheck(SensuPlugin):
                     default_threshold = threshold
 
             # If we didn't find a specific threshold, then we need to use the default
-            if not matching_thresholds:
+            if not matching_thresholds and default_threshold:
                 matching_thresholds.append(default_threshold)
 
         elif alert_type:
@@ -303,7 +308,7 @@ class SensuPluginCheck(SensuPlugin):
 
     def process_output_and_rc(
         self,
-        threshold_result: ThresholdResult,
+        threshold_result: ThresholdResult | None,
         result_message_good: str,
         result_message_alert: str,
     ) -> tuple[str, int]:

@@ -7,6 +7,12 @@
       "label": "Start localstack",
       "type": "shell",
       "command": "cd test/localstack && docker-compose up -d",
+    },
+    {
+      "label": "Setup SQS & DynamoDB",
+      "dependsOn": "Start localstack",
+      "type": "shell",
+      "command": "cd test/localstack && ./setup.sh",
     }
   ]
 }

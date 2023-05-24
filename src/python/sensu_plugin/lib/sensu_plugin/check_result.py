@@ -13,8 +13,8 @@ class CheckResultMetadata:
         warn_message (str): Message to be output if the check is WARN
         crit_message (str): Message to be output if the check is CRIT
         check_name (str): Name of the check
-        alert_id (str): ID of the alert
-        alert_type (str): Type of the alert
+        alert_id (str | None): ID of the alert
+        alert_type (str | None): Type of the alert
         state_file_dir (str): Directory containing state files
     """
 
@@ -22,6 +22,6 @@ class CheckResultMetadata:
     warn_message: str
     crit_message: str
     check_name: str
-    alert_id: str
-    alert_type: str
+    alert_id: str | None
+    alert_type: str | None
     state_file_dir: str

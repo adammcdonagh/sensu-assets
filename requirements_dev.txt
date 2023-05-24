@@ -9,3 +9,5 @@ pylint
 pytest
 freezegun
 localstack
+pydantic
+mypy

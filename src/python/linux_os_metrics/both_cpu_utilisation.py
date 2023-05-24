@@ -195,7 +195,7 @@ class LinuxCPUMetrics(SensuPluginCheck):
 
         self.return_final_output(rc, result_message)
 
-    def _process_thresholds_file(self):
+    def _process_thresholds_file(self) -> None:
         # Handle anything in the thresholds file
         if os.path.exists(self.options.thresholds_file):
             with open(self.options.thresholds_file, encoding="utf-8") as file:
@@ -206,34 +206,21 @@ class LinuxCPUMetrics(SensuPluginCheck):
                     kwargs = {}
                     metadata = {}
 
-                    if "warn_threshold" in threshold:
-                        groups = ALERT_TYPE_REGEX.match(
-                            threshold["warn_threshold"]
-                        ).groups()
-                        kwargs["warn_threshold"] = groups[0]
-                        metadata["alert_type"] = groups[1]
-                    if "crit_threshold" in threshold:
-                        groups = ALERT_TYPE_REGEX.match(
-                            threshold["crit_threshold"]
-                        ).groups()
-                        kwargs["crit_threshold"] = groups[0]
-                        metadata["alert_type"] = groups[1]
+                    for arg in ("warn_threshold", "crit_threshold"):
+                        if match_ := ALERT_TYPE_REGEX.match(threshold[arg]):
+                            kwargs[arg] = match_.groups()[0]
+                            metadata["alert_type"] = match_.groups()[1]
 
                     if "team" in threshold:
                         kwargs["team"] = threshold["team"]
                     if "min_severity" in threshold:
                         kwargs["min_severity"] = threshold["min_severity"]
 
-                    if "warn_time_period" in threshold:
-                        # Convert time period to seconds
-                        kwargs["warn_time_seconds"] = self.map_time_period_to_seconds(
-                            threshold["warn_time_period"]
-                        )
-                    if "crit_time_period" in threshold:
-                        # Convert time period to seconds
-                        kwargs["crit_time_seconds"] = self.map_time_period_to_seconds(
-                            threshold["crit_time_period"]
-                        )
+                    for arg in ("warn_time_period", "crit_time_period"):
+                        if arg in threshold:
+                            kwargs[arg] = Threshold.map_time_period_to_seconds(
+                                threshold[arg]
+                            )
 
                     if "warn_occurrences" in threshold:
                         kwargs["warn_occurrences"] = threshold["warn_occurrences"]
@@ -249,7 +236,7 @@ class LinuxCPUMetrics(SensuPluginCheck):
                     threshold = Threshold(**kwargs)
                     self.thresholds.append(threshold)
 
-    def _process_thresholds(self, threshold_level, override_line):
+    def _process_thresholds(self, threshold_level: str, override_line: str) -> None:
         """Process any thresholds for the specified threshold level and create the appropriate Threshold objects."""
         matches = (
             re.findall(CPU_OVERRIDE_REGEX, override_line)
@@ -294,7 +281,9 @@ class LinuxCPUMetrics(SensuPluginCheck):
 
             self.thresholds.append(threshold)
 
-    def _cpu_override_type(self, arg_value, pat=re.compile(CPU_OVERRIDE_REGEX)):
+    def _cpu_override_type(
+        self, arg_value: str, pat: re.Pattern = re.compile(CPU_OVERRIDE_REGEX)
+    ) -> str:
         if not pat.match(arg_value):
             raise argparse.ArgumentTypeError(
                 f"Argument must match {CPU_OVERRIDE_REGEX}"

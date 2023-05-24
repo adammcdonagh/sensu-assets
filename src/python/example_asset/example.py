@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Example python script to be packaged as a Sensu Asset."""
 
 import sys
 

@@ -11,4 +11,31 @@
     "src/python/sensu_plugin/lib"
   ],
   "python.analysis.typeCheckingMode": "off",
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.formatting.provider": "black",
+  "files.associations": {
+    "*.json": "jsonc"
+  },
+  "files.autoSave": "off", // needed for editor.formatOnSave
+  "files.insertFinalNewline": true, // needed for pre-commit check
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": true,
+  "editor.rulers": [
+    80
+  ],
+  "isort.args": [
+    "--profile",
+    "black"
+  ],
+  "pylint.severity": {
+    "convention": "Warning",
+    "info": "Warning"
+  },
+  "python.linting.mypyArgs": [
+    "--config-file",
+    "mypy.ini"
+  ]
 }

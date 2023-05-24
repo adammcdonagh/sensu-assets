@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: pylint
         name: pylint
-        entry: pylint
+        entry: test/run-in-env.sh pylint
         language: system
         types: [python]
         args:
@@ -32,3 +32,10 @@ repos:
             "-rn", # Only display messages
             "-sn", # Don't display the score
           ]
+      - id: mypy
+        name: mypy
+        entry: test/run-in-env.sh mypy
+        language: script
+        types: [python]
+        require_serial: true
+        files: ^src/python/.+\.py$

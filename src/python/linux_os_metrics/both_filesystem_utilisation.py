@@ -187,13 +187,12 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
                         result_message,
                         "Some filesystems exceed the threshold",
                     )
-
         self.return_final_output(rc, result_message)
 
-    def _process_thresholds_file(self) -> None:
+    def _process_thresholds_file(self) -> None:  # pylint: disable=too-many-branches
         # Handle any threshold overrides
         if os.path.exists(self.options.thresholds_file):
-            with open(self.options.thresholds_file, encoding="utf-8") as file:
+            with open(self.options.thresholds_file, mode="r", encoding="utf-8") as file:
                 json_file = json.load(file)
                 for threshold in json_file:
                     logging.debug(threshold)
@@ -209,16 +208,11 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
                         if arg in threshold:
                             kwargs[arg] = threshold[arg]
 
-                    if "warn_time_period" in threshold:
-                        # Convert time period to seconds
-                        kwargs["warn_time_seconds"] = self.map_time_period_to_seconds(
-                            threshold["warn_time_period"]
-                        )
-                    if "crit_time_period" in threshold:
-                        # Convert time period to seconds
-                        kwargs["crit_time_seconds"] = self.map_time_period_to_seconds(
-                            threshold["crit_time_period"]
-                        )
+                    for arg in ("warn_time_period", "crit_time_period"):
+                        if arg in threshold:
+                            kwargs[arg] = Threshold.map_time_period_to_seconds(
+                                threshold[arg]
+                            )
 
                     # Create a threshold object
                     threshold = Threshold(**kwargs)
@@ -229,16 +223,18 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
             logging.debug("Handling custom thresholds")
             for override in self.options.filesystem_override:
                 # Pull out the useful info from the override (we know it matches the regex, as it passed the argparse check)
-                groups = re.match(FILESYSTEM_OVERRIDE_REGEX, override).groups()
-                kwargs = {"id": groups[0], "ignore": groups[1]}
-                if len(groups) > 2:
-                    kwargs["warn_threshold"] = groups[2]
-                if len(groups) > 3:
-                    kwargs["crit_threshold"] = groups[3]
-                if len(groups) > 4:
-                    kwargs["team"] = groups[4]
-                if len(groups) > 5:
-                    kwargs["min_severity"] = groups[5]
+                kwargs = {}
+                if match_ := re.match(FILESYSTEM_OVERRIDE_REGEX, override):
+                    groups = match_.groups()
+                    kwargs = {"id": groups[0], "ignore": groups[1]}
+                    if len(groups) > 2:
+                        kwargs["warn_threshold"] = groups[2]
+                    if len(groups) > 3:
+                        kwargs["crit_threshold"] = groups[3]
+                    if len(groups) > 4:
+                        kwargs["team"] = groups[4]
+                    if len(groups) > 5:
+                        kwargs["min_severity"] = groups[5]
 
                 # Create a threshold object
                 threshold = Threshold(**kwargs)
@@ -246,7 +242,7 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
 
 
 def filesystem_override_type(
-    arg_value: str, pat=re.compile(FILESYSTEM_OVERRIDE_REGEX)
+    arg_value: str, pat: re.Pattern = re.compile(FILESYSTEM_OVERRIDE_REGEX)
 ) -> str:
     """Validate the filesystem override argument.
 

@@ -11,7 +11,11 @@
       "program": "src/python/linux_os_metrics/both_filesystem_utilisation.py",
       "args": [
         "-v",
-        "-c"
+        "-c",
+        "--default_warn",
+        "1"
+        // "--thresholds_file",
+        // "test/linux_os_metrics/filesystems.json",
       ],
       "console": "integratedTerminal",
       "justMyCode": true,
@@ -20,20 +24,43 @@
       }
     },
     {
-      "name": "Python: Handler SQS (openstack)",
+      "name": "Python: CPU Utilisation",
+      "type": "python",
+      "request": "launch",
+      "program": "src/python/linux_os_metrics/both_cpu_utilisation.py",
+      "args": [
+        "-v",
+        "--default_warn",
+        "1%,,,Minor",
+        "--default_warn",
+        "1%,,,Minor",
+        "--default_crit",
+        "1%,,,Minor",
+        "--default_crit",
+        "1%,1m,,Minor"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "src/python/sensu_plugin/lib",
+        "SENSU_CACHE_DIR": "/tmp"
+      }
+    },
+    {
+      "name": "Python: Handler SQS (localstack)",
       "type": "python",
       "request": "launch",
       "program": "src/python/handler_sqs/handler_sqs.py",
-      "preLaunchTask": "Start localstack",
+      "preLaunchTask": "Setup SQS & DynamoDB",
       "console": "integratedTerminal",
       "args": [
         "-t",
         "sensu-alerts",
         "-q",
-        "sensu-alerts",
+        "sensu-alerts.fifo",
         "-v",
         "<",
-        "test/test-event-crit.json"
+        "test/handler_sqs/test-event-crit.json"
       ],
       "justMyCode": false,
       "env": {
@@ -42,6 +69,7 @@
         "AWS_ACCESS_KEY_ID": "local",
         "AWS_SECRET_ACCESS_KEY": "local",
         "AWS_DEFAULT_REGION": "eu-west-2",
+        "SENSU_ASSET_LOG_FILE_PATH": "/tmp/sqs.log"
       }
     },
   ]

@@ -39,14 +39,14 @@ class CustomFormatter(logging.Formatter):
         logging.CRITICAL: blink_red + LOG_FORMAT + reset,
     }
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         """Format the log message."""
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
 
-def init_logging(name: str, log_level: str = logging.INFO) -> None:
+def init_logging(name: str, log_level: int = logging.INFO) -> logging.Logger:
     """
     Initialize logging for the script.
 
@@ -81,10 +81,9 @@ def init_logging(name: str, log_level: str = logging.INFO) -> None:
         # Pull the log file name from environment variables. If there's one called
         # SENSU_ASSET_LOG_FILE_PATH
 
-        log_file_path = os.environ.get("SENSU_ASSET_LOG_FILE_PATH")
-        valid_log_file_path = _check_log_file_path(log_file_path)
+        log_file_path = os.environ.get("SENSU_ASSET_LOG_FILE_PATH", "")
 
-        if valid_log_file_path:
+        if _check_log_file_path(log_file_path):
             handler = logging.FileHandler(log_file_path)
             handler.setFormatter(formatter)
             asset_log.addHandler(handler)
@@ -109,7 +108,7 @@ def _check_log_file_path(log_file_path: str) -> bool:
     return False
 
 
-def write_log_file(log_message: str):
+def write_log_file(log_message: str) -> None:
     """
     Write a log message to the log file.
 

@@ -15,8 +15,7 @@ import traceback
 from collections import namedtuple
 from dataclasses import dataclass
 
-from sensu_plugin.asset import SensuAsset
-from sensu_plugin.exithook import ExitHook
+from sensu_plugin import ExitHook, SensuAsset
 
 # create a namedtuple of all valid exit codes
 ExitCode = namedtuple("ExitCode", ["OK", "WARNING", "CRITICAL", "UNKNOWN"])
@@ -34,7 +33,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
     test_mode: bool
     _hook: ExitHook
 
-    def __init__(self, autorun=True):
+    def __init__(self, autorun: bool = True):
         """Create base class and initialise logging."""
         # Call super class which will sort out the logging
         super().__init__()
@@ -45,7 +44,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
 
         # Determine the CACHE_DIR based on the platform, unless its overridden in the environment
         if os.environ.get("SENSU_CACHE_DIR"):
-            self.SENSU_CACHE_DIR = os.environ.get("SENSU_CACHE_DIR")
+            self.SENSU_CACHE_DIR = os.environ.get("SENSU_CACHE_DIR", "")
         else:
             # If windows then use the default windows cache dir
             # if macos then use /tmp/sensu-agent
@@ -73,13 +72,13 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
         if hasattr(self, "setup"):
-            self.setup()
+            self.setup()  # mypy: ignore-errors # type: ignore
         (self.options, self.remain) = self.parser.parse_known_args()
 
         if autorun:
             self.run()
 
-    def sanitise_arguments(self, args) -> tuple:
+    def sanitise_arguments(self, args: tuple) -> tuple:
         """Validate arguments.
 
         Checks whether the arguments have been passed by a dynamic status code
@@ -105,15 +104,14 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
 
         return args
 
-    def output(self, args) -> None:
+    def output(self, args: tuple) -> None:
         """Print the output message."""
         print(f"SensuPlugin: {' '.join(str(a) for a in args)}")
 
-    def output_metrics(self, args) -> None:
+    def output_metrics(self, args: list) -> None:
         """Print the output message."""
         # sanitise the arguments
-        args = self.sanitise_arguments(args)
-        if args:
+        if args := self.sanitise_arguments(args):  # type: ignore[arg-type, assignment]
             # convert the arguments to a list
             args = list(args)
             # add the timestamp if required
@@ -124,13 +122,12 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
             # produce the output
             print(" ".join(str(s) for s in args[0:3]))
 
-    def __make_dynamic(self, method):
+    def __make_dynamic(self, method: str) -> None:
         """Create a method for each of the exit codes."""
 
-        def dynamic(*args, **kwargs) -> None:
+        def dynamic(*args: None | tuple, **kwargs: None | tuple) -> None:
             self.plugin_info["status"] = method
-            if not args:
-                args = None
+
             if (
                 "metrics_only" in self.options and not self.options.metrics_only
             ) or "metrics_only" not in self.options:
@@ -141,7 +138,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
                 source_msg = f"SOURCE:{kwargs['source']} " if "source" in kwargs else ""
 
                 self.output(  # pylint: disable=unexpected-keyword-arg
-                    args, severity=severity_msg, team=team_msg, source=source_msg
+                    args, severity=severity_msg, team=team_msg, source=source_msg  # type: ignore[call-arg]
                 )
             if "exit" in kwargs and kwargs["exit"]:
                 sys.exit(getattr(self.exit_code, method))
@@ -155,7 +152,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
         """Method should be overwritten by inherited classes."""  # noqa: D401
         self.warning("Not implemented! You should override SensuPlugin.run()")
 
-    def __exitfunction(self):
+    def __exitfunction(self) -> None:
         """Ensure that the plugin exits correctly.
 
         Method called by exit hook, ensures that both an exit code and

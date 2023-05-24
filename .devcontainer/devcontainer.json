@@ -17,7 +17,8 @@
         "esbenp.vscode-prettier",
         "ms-azuretools.vscode-docker",
         "ms-python.isort",
-        "yzhang.markdown-all-in-one"
+        "yzhang.markdown-all-in-one",
+        "ms-python.pylint"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -40,6 +41,7 @@
         },
         "files.autoSave": "off", // needed for editor.formatOnSave
         "files.insertFinalNewline": true, // needed for pre-commit check
+        "files.trimTrailingWhitespace": true,
         "editor.formatOnSave": true,
         "editor.rulers": [
           80
@@ -48,7 +50,16 @@
           "--profile",
           "black"
         ],
-        "python.linting.pylintCategorySeverity.refactor": "Information"
+        "pylint.severity": {
+          "convention": "Warning",
+          "info": "Warning"
+        },
+        "python.testing.pytestEnabled": true,
+        "python.linting.mypyEnabled": true,
+        "python.linting.mypyArgs": [
+          "--config-file",
+          "mypy.ini"
+        ]
       }
     }
   },

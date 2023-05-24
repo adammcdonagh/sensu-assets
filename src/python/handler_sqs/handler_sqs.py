@@ -11,6 +11,7 @@ import sys
 import time
 from copy import deepcopy
 from datetime import datetime
+from typing import Any
 
 import boto3
 from sensu_plugin import EnvDefault, SensuAsset, write_log_file
@@ -35,150 +36,12 @@ GRAPHITE_LINE_PATTERN = re.compile(r"^([^\s]+) ([^\s]+) \d+$")
 class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
     """This class handles incoming events from Sensu, processes them based on severity and previous state (stored in DynamoDB) and forwards them to an SQS queue."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise the class."""
         # Call the parent init
         super().__init__()
-        self._parse_cli_args()
+        self.args = self._parse_cli_args()
         self.run()
-
-    def run(self):
-        """Run the handler."""
-        # Setup custom logging for boto3
-        self._setup_logging()
-
-        # Strip out any proxy settings from the environment
-        os.environ["HTTP_PROXY"] = ""
-        os.environ["HTTPS_PROXY"] = ""
-        os.environ["http_proxy"] = ""
-        os.environ["https_proxy"] = ""
-
-        # Parse event data from STDIN
-        stdin_event = "".join(sys.stdin.readlines())
-
-        # Write STDIN to /tmp
-        with open("/tmp/event.json", "w", encoding="utf-8") as file_handle:
-            file_handle.write(stdin_event)
-
-        # Parse the event into JSON format
-        json_object = json.loads(stdin_event)
-
-        # Get objects for interacting with DynamoDB and SQS
-        self.ddb_table = (
-            boto3.Session()
-            .resource("dynamodb", endpoint_url=self.args.aws_endpoint_url)
-            .Table(self.args.dynamodb_table)
-        )
-        self.sqs_queue = (
-            boto3.Session()
-            .resource("sqs", endpoint_url=self.args.aws_endpoint_url)
-            .get_queue_by_name(QueueName=self.args.sqs_queue)
-        )
-
-        # Pull out the raw check output
-        check_output = json_object["check"]["output"].split("\n")
-
-        # Loop through the check output and pull out all the lines that conform to the alert pattern
-        for check_line in check_output:
-            # Parse the line and extract all the important attributes
-            alert_attributes = self._parse_alert_line(check_line, json_object)
-            # Skip the line if there's no attributes found
-            if not alert_attributes:
-                continue
-
-            self.logger.debug(f"Alert attributes: {alert_attributes}")
-
-            # Alert key for this line
-            alert_key = f"{alert_attributes['monitor_name']}_{alert_attributes['key']}_{alert_attributes['source']}"
-
-            # BEFORE sending anything, we need to determine exactly what to send based on the status of the message
-
-            # Check in DynamoDB for a matching key
-            skip_alert = False
-            self.logger.debug(f"Seaching DynamoDB for {alert_key}")
-            table_item = self.ddb_table.get_item(Key={"alert_key": alert_key})
-
-            skip_alert = self._handle_existing_alert(
-                table_item, alert_attributes, alert_key
-            )
-
-            if not skip_alert:
-                # Send the alert to the SQS queue
-                send_response = self._send_to_sqs(
-                    self.sqs_queue, alert_key, alert_attributes
-                )
-                self.logger.debug(send_response)
-
-            self.logger.debug("")
-        return 0
-
-    def _put_event_in_db(
-        self, ddb_table, alert_key: str, alert_attributes: dict
-    ) -> dict:
-        """Put the event in DynamoDB.
-
-        :param ddb_table: DynamoDB table object
-        :param alert_key: Alert key
-        :param alert_attributes: Alert attributes
-        :return: Result of the put_item call
-        """
-        result = ddb_table.put_item(
-            Item={
-                "alert_key": alert_key,
-                "summary": alert_attributes["summary"],
-                "expiration_time": int(time.time()) + alert_attributes["ttl"],
-                "source": alert_attributes["source"],
-                "severity": alert_attributes["severity"],
-            },
-        )
-        self.logger.debug(f"Put in DynamoDB: {result}")
-        return result
-
-    def _send_to_sqs(self, sqs_queue, alert_key: str, alert_attributes: dict) -> dict:
-        """Send the event to SQS.
-
-        :param sqs_queue: SQS queue object
-        :param alert_key: Alert key
-        :param alert_attributes: Alert attributes
-        :return: Result of the send_message call
-        """
-        mapped_severity = SEVERITY_MAP[alert_attributes["severity"]]
-        # Construct the message
-        insert_time = int(time.time())
-        insert_timestamp = datetime.fromtimestamp(insert_time).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-        message_body = {
-            "node": alert_attributes["source"],
-            "alertKey": alert_key,
-            "summary": alert_attributes["summary"],
-            "severity": mapped_severity,
-            "team": alert_attributes["team"] if "team" in alert_attributes else None,
-            "expiry": alert_attributes["expiry"]
-            if "expiry" in alert_attributes
-            else None,
-            "environment": alert_attributes["environment"],
-            "insertTime": time.time(),
-            "insertTimestamp": insert_timestamp,
-        }
-
-        message_body = json.dumps(message_body)
-        self.logger.debug(f"Sent to SQS: {message_body}")
-        return sqs_queue.send_message(
-            MessageBody=message_body, MessageGroupId=alert_attributes["monitor_name"]
-        )
-
-    def _setup_logging(self):
-        """Set logging for other packages."""
-        if self.args.verbose:
-            logging.getLogger().setLevel(logging.DEBUG)
-
-        if self.args.extra_verbose:
-            logging.getLogger("boto3").setLevel(logging.DEBUG)
-            logging.getLogger("botocore").setLevel(logging.DEBUG)
-            logging.getLogger("nose").setLevel(logging.DEBUG)
-            logging.getLogger("s3transfer").setLevel(logging.DEBUG)
-            logging.getLogger("urllib3").setLevel(logging.DEBUG)
 
     def _parse_cli_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser(
@@ -234,11 +97,152 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
             envvar="OFFLINE_AGENT_RESPONSIBLE_TEAM",
         )
 
-        self.args = parser.parse_args()
+        return parser.parse_args()
+
+    def run(self) -> int:
+        """Run the handler."""
+        # Setup custom logging for boto3
+        self._setup_logging()
+
+        # Strip out any proxy settings from the environment
+        os.environ["HTTP_PROXY"] = ""
+        os.environ["HTTPS_PROXY"] = ""
+        os.environ["http_proxy"] = ""
+        os.environ["https_proxy"] = ""
+
+        # Parse event data from STDIN
+        stdin_event = "".join(sys.stdin.readlines())
+
+        # Write STDIN to /tmp
+        with open("/tmp/event.json", "w", encoding="utf-8") as file_handle:
+            file_handle.write(stdin_event)
+
+        # Parse the event into JSON format
+        json_object = json.loads(stdin_event)
+
+        # Get objects for interacting with DynamoDB and SQS
+        self.ddb_table = (
+            boto3.Session()
+            .resource("dynamodb", endpoint_url=self.args.aws_endpoint_url)
+            .Table(self.args.dynamodb_table)
+        )
+        self.sqs_queue = (
+            boto3.Session()
+            .resource("sqs", endpoint_url=self.args.aws_endpoint_url)
+            .get_queue_by_name(QueueName=self.args.sqs_queue)
+        )
+
+        # Pull out the raw check output
+        check_output = json_object["check"]["output"].split("\n")
+
+        # Loop through the check output and pull out all the lines that conform to the alert pattern
+        for check_line in check_output:
+            # Parse the line and extract all the important attributes
+            # Skip the line if there's no attributes found
+            if not (
+                alert_attributes := self._parse_alert_line(check_line, json_object)
+            ):
+                continue
+
+            self.logger.debug(f"Alert attributes: {alert_attributes}")
+
+            # Alert key for this line
+            alert_key = f"{alert_attributes['monitor_name']}_{alert_attributes['key']}_{alert_attributes['source']}"
+
+            # BEFORE sending anything, we need to determine exactly what to send based on the status of the message
+
+            # Check in DynamoDB for a matching key
+            skip_alert = False
+            self.logger.debug(f"Seaching DynamoDB for {alert_key}")
+            table_item = self.ddb_table.get_item(Key={"alert_key": alert_key})
+
+            skip_alert = self._handle_existing_alert(
+                table_item, alert_attributes, alert_key
+            )
+
+            if not skip_alert:
+                # Send the alert to the SQS queue
+                send_response = self._send_to_sqs(
+                    self.sqs_queue, alert_key, alert_attributes
+                )
+                self.logger.debug(send_response)
+
+            self.logger.debug("")
+        return 0
+
+    def _put_event_in_db(
+        self, ddb_table: Any, alert_key: str, alert_attributes: dict
+    ) -> Any:
+        """Put the event in DynamoDB.
+
+        :param ddb_table: DynamoDB table object
+        :param alert_key: Alert key
+        :param alert_attributes: Alert attributes
+        :return: Result of the put_item call
+        """
+        result = ddb_table.put_item(
+            Item={
+                "alert_key": alert_key,
+                "summary": alert_attributes["summary"],
+                "expiration_time": int(time.time()) + alert_attributes["ttl"],
+                "source": alert_attributes["source"],
+                "severity": alert_attributes["severity"],
+            },
+        )
+        self.logger.debug(f"Put in DynamoDB: {result}")
+        return result
+
+    def _send_to_sqs(
+        self, sqs_queue: Any, alert_key: str, alert_attributes: dict
+    ) -> Any:
+        """Send the event to SQS.
+
+        :param sqs_queue: SQS queue object
+        :param alert_key: Alert key
+        :param alert_attributes: Alert attributes
+        :return: Result of the send_message call
+        """
+        mapped_severity = SEVERITY_MAP[alert_attributes["severity"]]
+        # Construct the message
+        insert_time = int(time.time())
+        insert_timestamp = datetime.fromtimestamp(insert_time).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        message_body = {
+            "node": alert_attributes["source"],
+            "alertKey": alert_key,
+            "summary": alert_attributes["summary"],
+            "severity": mapped_severity,
+            "team": alert_attributes["team"] if "team" in alert_attributes else None,
+            "expiry": alert_attributes["expiry"]
+            if "expiry" in alert_attributes
+            else None,
+            "environment": alert_attributes["environment"],
+            "insertTime": time.time(),
+            "insertTimestamp": insert_timestamp,
+        }
+
+        message_body_ = json.dumps(message_body)
+        self.logger.debug(f"Sent to SQS: {message_body_}")
+        return sqs_queue.send_message(
+            MessageBody=message_body_, MessageGroupId=alert_attributes["monitor_name"]
+        )
+
+    def _setup_logging(self) -> None:
+        """Set logging for other packages."""
+        if self.args.verbose:
+            logging.getLogger().setLevel(logging.DEBUG)
+
+        if self.args.extra_verbose:
+            logging.getLogger("boto3").setLevel(logging.DEBUG)
+            logging.getLogger("botocore").setLevel(logging.DEBUG)
+            logging.getLogger("nose").setLevel(logging.DEBUG)
+            logging.getLogger("s3transfer").setLevel(logging.DEBUG)
+            logging.getLogger("urllib3").setLevel(logging.DEBUG)
 
     def _parse_alert_line(  # pylint: disable=too-many-statements,too-many-branches
         self, check_line: str, event_object: dict
-    ) -> dict:
+    ) -> dict | None:
         alert_attributes = {}
 
         # Parse the line
@@ -264,7 +268,7 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
         elif no_keepalive_line_match:
             alert_attributes["summary"] = (
                 "Sensu agent offline ",
-                f"- No communication for {(no_keepalive_line_match.group(1)/60):.1f} mins",
+                f"- No communication for {(float(no_keepalive_line_match.group(1))/60):.1f} mins",
             )
             alert_attributes["monitor_name"] = "keepalive"
             alert_attributes["team"] = self.args.offline_agent_responsible_team
@@ -287,7 +291,7 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
 
             alert_attributes["summary"] = (
                 f"Timeout running - {event_object['check']['metadata']['name']} ",
-                f"- Monitor frequency is: {(event_object['check']['interval']/60):.1f} mins.",
+                f"- Monitor frequency is: {(float(event_object['check']['interval'])/60):.1f} mins.",
             )
             alert_attributes["monitor_name"] = "timeout"
             alert_attributes["key"] = event_object["check"]["metadata"]["name"]
@@ -343,10 +347,10 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
         ttl = DEFAULT_TTL
         if (
             "interval" in alert_attributes
-            and alert_attributes["interval"] > 0
+            and int(alert_attributes["interval"]) > 0
             and "ttl" not in alert_attributes
         ):
-            ttl = alert_attributes["interval"] * 3
+            ttl = int(alert_attributes["interval"]) * 3
         ttl = max(ttl, 10)
         alert_attributes["ttl"] = ttl
 
@@ -429,12 +433,6 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
 
 
 if __name__ == "__main__":
-    logging.getLogger("boto3").setLevel(logging.WARNING)
-    logging.getLogger("botocore").setLevel(logging.WARNING)
-    logging.getLogger("nose").setLevel(logging.WARNING)
-    logging.getLogger("s3transfer").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-
     start_time = round(time.time() * 1000)
     HandlerSQS()
     end_time = round(time.time() * 1000)

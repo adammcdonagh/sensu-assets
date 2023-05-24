@@ -16,7 +16,7 @@ class SensuAsset:  # pylint: disable=too-few-public-methods
     The base class will always initialise the custom logger
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create base class and initialise logging."""
         self.logger = init_logging(__name__)
 
@@ -32,7 +32,13 @@ class EnvDefault(argparse.Action):
         default (str): The default value for this argument
     """
 
-    def __init__(self, envvar, required=True, default=None, **kwargs):
+    def __init__(
+        self,
+        envvar: str,
+        required: bool = True,
+        default: str | None = None,
+        **kwargs: dict
+    ) -> None:
         """Create custom argparse action to allow for environment variable overrides."""
         if not default and envvar:
             if envvar in os.environ:
@@ -40,8 +46,8 @@ class EnvDefault(argparse.Action):
         if required and default:
             required = False
 
-        super().__init__(default=default, required=required, **kwargs)
+        super().__init__(default=default, required=required, **kwargs)  # type: ignore[arg-type]
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser, namespace, values, option_string=None) -> None:  # type: ignore[no-untyped-def]
         """Call the custom argparse action to allow for environment variable overrides."""
         setattr(namespace, self.dest, values)

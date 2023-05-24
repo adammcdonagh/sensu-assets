@@ -8,14 +8,13 @@ import os
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Pattern
 
 import humanize
 from sensu_plugin.check_result import CheckResultMetadata
 from sensu_plugin.logging import init_logging
 
 logger = init_logging(__name__)
-TIME_PERIOD_REGEX: Pattern = re.compile(r"(\d+)(h|m)")
+TIME_PERIOD_REGEX: re.Pattern = re.compile(r"(\d+)(h|m)")
 
 
 @dataclass
@@ -55,19 +54,19 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         operator (str): The operator to use for the comparison, defaults to ">="
     """
 
-    id: str = None  # pylint: disable=invalid-name
-    warn_threshold: int = None
-    crit_threshold: int = None
-    team: str = None
+    id: str | None = None
+    warn_threshold: int | None = None
+    crit_threshold: int | None = None
+    team: str | None = None
     min_severity: str = "Minor"
-    metadata: dict = None
+    metadata: dict = field(default_factory=dict)
     ignore: bool = False
-    warn_time_seconds: int = None
-    crit_time_seconds: int = None
-    warn_occurrences: int = None
-    crit_occurrences: int = None
+    warn_time_seconds: int | None = None
+    crit_time_seconds: int | None = None
+    warn_occurrences: int | None = None
+    crit_occurrences: int | None = None
     operator: str = ">="
-    exclude_times: list = None
+    exclude_times: list | None = None
 
     # Validate the operator when the class is created
     def __post_init__(self) -> None:
@@ -93,9 +92,9 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
     def evaluate_threshold(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
         self,
         threshold_id: int,
-        current_value: int | str,
+        current_value: int | str | float,
         check_result_metadata: CheckResultMetadata,
-    ) -> ThresholdResult:
+    ) -> ThresholdResult | None:
         """Evaluate a threshold.
 
         This method does the majority of the work. It checks whether each threshold is breached, and
@@ -103,7 +102,7 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
 
         Args:
             threshold_id (int): The ID of the threshold to evaluate
-            current_value (int|str): The current value to compare against the threshold
+            current_value (int | str | float): The current value to compare against the threshold
             check_result_metadata (CheckResultMetadata): The check result metadata object
 
         Returns:
@@ -171,11 +170,11 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
 
             operator_ = self.map_operator_to_function(self.operator)
             logger.debug(
-                f"Comparing: {current_value} {operator_.__name__} {threshold_limit}"
+                f"Comparing: {current_value} {operator_.__name__} {threshold_limit}"  # type: ignore[attr-defined]
             )
 
             is_advanced_threshold = not (not occurrences and not alert_time)
-            if threshold_limit and operator_(current_value, threshold_limit):
+            if threshold_limit and operator_(current_value, threshold_limit):  # type: ignore[misc]
                 # We've breached the threshold
                 logger.debug(f"Over {threshold} threshold")
                 period = (
@@ -255,8 +254,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
             file_pattern = rf"{file_pattern}_threshold_(\d*)$"
             if os.path.exists(state_file_dir):
                 for file in os.listdir(state_file_dir):
-                    if re.match(file_pattern, file):
-                        threshold_no = int(re.match(file_pattern, file)[1])
+                    if match := re.match(file_pattern, file):
+                        threshold_no = int(match[1])
                         if "alert_cache" not in self.metadata:
                             self.metadata["alert_cache"] = []
 
@@ -303,7 +302,7 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         return False
 
     def _populate_threshold_values(
-        self, threshold, crit_message, warn_message
+        self, threshold: str, crit_message: str, warn_message: str
     ) -> tuple:
         """Populate the threshold values.
 
@@ -358,12 +357,12 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         has_output: bool,
         threshold: str,
         threshold_id: int,
-        alert_id: str,
+        alert_id: str | None,
         message: str,
         severity: str,
         alert_time: int,
         occurrences: int,
-        period: int,
+        period: str,
         result_messages: list,
     ) -> tuple:
         # Only allow one output per threshold
@@ -485,7 +484,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
             with open(state_file, "w", encoding="utf-8") as file_:
                 json.dump(self.metadata["alert_cache"], file_)
 
-    def map_operator_to_function(self, operator_: str) -> callable:
+    @staticmethod
+    def map_operator_to_function(operator_: str) -> callable:  # type: ignore[valid-type]
         """Map the operator string to the correct function.
 
         Args:
@@ -504,7 +504,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         }
         return symbol_name_map[operator_]
 
-    def map_time_period_to_seconds(self, time_period: str) -> int:
+    @staticmethod
+    def map_time_period_to_seconds(time_period: str) -> int:
         """Map the time period string to the number of seconds.
 
         Args:
@@ -513,5 +514,11 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         Returns:
             int: The number of seconds that corresponds to the time period.
         """
-        groups = TIME_PERIOD_REGEX.match(time_period).groups()
+        # Validate time_period, and if its valid convert it to seconds
+        if not (match_ := TIME_PERIOD_REGEX.match(time_period)):
+            raise ValueError(
+                f"Invalid time period '{time_period}' specified. Time period must be in the format of <number><h|m> (e.g. 1h or 30m)"
+            )
+
+        groups = match_.groups()
         return int(groups[0]) * 60 * 60 if groups[1] == "h" else int(groups[0]) * 60
