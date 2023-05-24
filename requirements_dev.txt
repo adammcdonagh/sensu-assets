@@ -8,6 +8,6 @@ flake8-docstrings
 pylint
 pytest
 freezegun
-localstack
+localstack>=2.0.2
 pydantic
 mypy
