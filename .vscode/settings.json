@@ -22,6 +22,7 @@
   "files.autoSave": "off", // needed for editor.formatOnSave
   "files.insertFinalNewline": true, // needed for pre-commit check
   "files.trimTrailingWhitespace": true,
+  "editor.formatOnType": true,
   "editor.formatOnSave": true,
   "editor.rulers": [
     80

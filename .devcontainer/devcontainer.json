@@ -59,7 +59,8 @@
         "python.linting.mypyArgs": [
           "--config-file",
           "mypy.ini"
-        ]
+        ],
+        "editor.formatOnType": true,
       }
     }
   },
