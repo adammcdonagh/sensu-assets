@@ -233,7 +233,7 @@ class LinuxCPUMetrics(SensuPluginCheck):
                     kwargs["metadata"] = metadata
 
                     # Create a threshold object
-                    threshold = Threshold(**kwargs)
+                    threshold = Threshold(**kwargs)  # type: ignore[arg-type]
                     self.thresholds.append(threshold)
 
     def _process_thresholds(self, threshold_level: str, override_line: str) -> None:

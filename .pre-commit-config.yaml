@@ -10,6 +10,9 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
+      - id: black
+        stages: [manual]
+        args: [--check]
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
@@ -24,18 +27,15 @@ repos:
     hooks:
       - id: pylint
         name: pylint
-        entry: test/run-in-env.sh pylint
+        entry: pylint
         language: system
         types: [python]
-        args:
-          [
-            "-rn", # Only display messages
-            "-sn", # Don't display the score
-          ]
+        args: ["-rn", "-sn", "--fail-on=I"]
       - id: mypy
         name: mypy
-        entry: test/run-in-env.sh mypy
-        language: script
+        entry: mypy
+        language: python
         types: [python]
+        args: ["--config-file", "mypy.ini"]
         require_serial: true
         files: ^src/python/.+\.py$

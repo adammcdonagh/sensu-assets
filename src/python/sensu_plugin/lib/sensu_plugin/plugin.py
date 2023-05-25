@@ -150,7 +150,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
 
     def run(self) -> None:
         """Method should be overwritten by inherited classes."""  # noqa: D401
-        self.warning("Not implemented! You should override SensuPlugin.run()")
+        self.warning("Not implemented! You should override SensuPlugin.run()")  # type: ignore[attr-defined]
 
     def __exitfunction(self) -> None:
         """Ensure that the plugin exits correctly.
@@ -167,7 +167,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
             sys.stdout.flush()
             sys.exit(1)
         elif self._hook.exception:
-            print(
+            print(  # type: ignore[unreachable] # This is a false positive
                 f"Check failed to run: {sys.last_type}, {traceback.format_tb(sys.last_traceback)} - {self._hook.exception}"
             )
             sys.stdout.flush()

@@ -61,7 +61,7 @@ class SensuPluginCheck(SensuPlugin):
         """
         self.plugin_info["message"] = m
 
-    def output(  # pylint: disable=too-many-arguments # type: ignore[misc]
+    def output(  # type: ignore[override]  # pylint: disable=too-many-arguments
         self,
         args: list[str] | None = None,
         alert_key: str | None = None,
@@ -130,13 +130,13 @@ class SensuPluginCheck(SensuPlugin):
             result_message (str): Message to be output by the plugin
         """
         if rc == 0:
-            self.ok(result_message, exit=True)
+            self.ok(result_message, exit=True)  # type: ignore[attr-defined]
         elif rc == 1:
-            self.warning(result_message, exit=True)
+            self.warning(result_message, exit=True)  # type: ignore[attr-defined]
         elif rc == 2:
-            self.critical(result_message, exit=True)
+            self.critical(result_message, exit=True)  # type: ignore[attr-defined]
         else:
-            self.unknown("Unknown state returned", exit=True)
+            self.unknown("Unknown state returned", exit=True)  # type: ignore[attr-defined]
 
     def process_value(  # pylint: disable=too-many-arguments
         self,

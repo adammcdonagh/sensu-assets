@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # pylint: disable=redefined-outer-name,unused-argument
+# mypy: disable-error-code="arg-type"
 """Tests for the SensuPluginCheck class."""
 import datetime
 import logging

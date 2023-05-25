@@ -1,57 +1,213 @@
 name: Test & Linting
 
 env:
-  PYTHON_VERSION: 3.11
+  DEFAULT_PYTHON: "3.11"
+  PRE_COMMIT_CACHE: ~/.cache/pre-commit
+  KEY_PREFIX: base-venv
+  CACHE_VERSION: 1
 on:
   push:
   pull_request:
     types: [opened, synchronize]
     branches: main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  python_lint:
+  prepare-base:
+    name: Prepare base dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      python-key: ${{ steps.generate-python-key.outputs.key }}
+      pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.5.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.6.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install dependencies
-        run: |
-          pip install -r requirements_dev.txt
-          pip install -r requirements.txt
-      - name: Run pylint
-        run: |
-          python -m pylint --recursive y .
-      - name: Run black
-        run: |
-          black --check .
-      - name: Run flake8
-        uses: julianwachholz/flake8-action@v2
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Generate partial Python venv restore key
+        id: generate-python-key
+        run: >-
+          echo "key=${{ env.KEY_PREFIX }}-${{ env.CACHE_VERSION }}-${{
+            hashFiles('pyproject.toml', 'requirements_dev.txt',
+          'requirements.txt') }}" >>
+          $GITHUB_OUTPUT
+      - name: Restore Python virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.3.1
         with:
-          checkName: "Python Lint"
-          path: "./"
-          plugins: flake8-bugbear pep8-naming flake8-use-fstring flake8-isort flake8-docstrings
-          config: .flake8
-      - name: Run mypy
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-python-key.outputs.key }}
+      - name: Create Python virtual environment
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          mypy src/python
-  test:
+          python -m venv venv
+          . venv/bin/activate
+          python -m pip install -U pip setuptools wheel
+          pip install -U -r requirements_dev.txt
+          pip install -U -r requirements.txt
+      - name: Generate pre-commit restore key
+        id: generate-pre-commit-key
+        run: >-
+          echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
+            hashFiles('.pre-commit-config.yaml') }}" >> $GITHUB_OUTPUT
+      - name: Restore pre-commit environment
+        id: cache-precommit
+        uses: actions/cache@v3.3.1
+        with:
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: >-
+            ${{ runner.os }}-${{ steps.generate-pre-commit-key.outputs.key }}
+      - name: Install pre-commit dependencies
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit install --install-hooks
+
+  pylint:
+    name: pylint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: prepare-base
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v4
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.5.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.6.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install dependencies
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore Python virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.3.1
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key:
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
+      - name: Restore pre-commit environment
+        id: cache-precommit
+        uses: actions/cache@v3.3.1
+        with:
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          fail-on-cache-miss: true
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Run pylint checks
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          pip install -r requirements.txt
-          pip install -r requirements_dev.txt
-      - name: Run tests
-        run: |
-          python -m pytest
+          . venv/bin/activate
+          pip list | grep 'pylint'
+          pre-commit run --verbose --hook-stage manual pylint --all-files
+
+    black:
+      name: black
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      needs: prepare-base
+      steps:
+        - name: Check out code from GitHub
+          uses: actions/checkout@v3.5.2
+        - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+          id: python
+          uses: actions/setup-python@v4.6.0
+          with:
+            python-version: ${{ env.DEFAULT_PYTHON }}
+            check-latest: true
+        - name: Restore Python virtual environment
+          id: cache-venv
+          uses: actions/cache@v3.3.1
+          with:
+            path: venv
+            fail-on-cache-miss: true
+            key:
+              ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.prepare-base.outputs.python-key }}
+        - name: Restore pre-commit environment
+          id: cache-precommit
+          uses: actions/cache@v3.3.1
+          with:
+            path: ${{ env.PRE_COMMIT_CACHE }}
+            fail-on-cache-miss: true
+            key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+        - name: Run black checks
+          run: |
+            . venv/bin/activate
+            pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
+
+    lint-other:
+      name: Check other linters
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      needs: prepare-base
+      steps:
+        - name: Check out code from GitHub
+          uses: actions/checkout@v3.5.2
+        - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+          id: python
+          uses: actions/setup-python@v4.6.0
+          with:
+            python-version: ${{ env.DEFAULT_PYTHON }}
+            check-latest: true
+        - name: Restore Python virtual environment
+          id: cache-venv
+          uses: actions/cache@v3.3.1
+          with:
+            path: venv
+            fail-on-cache-miss: true
+            key:
+              ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.prepare-base.outputs.python-key }}
+        - name: Restore pre-commit environment
+          id: cache-precommit
+          uses: actions/cache@v3.3.1
+          with:
+            path: ${{ env.PRE_COMMIT_CACHE }}
+            fail-on-cache-miss: true
+            key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+        - name: Run flake8 checks
+          run: |
+            . venv/bin/activate
+            pre-commit run flake8 --all-files
+        - name: Run mypy checks
+          run: |
+            . venv/bin/activate
+            pre-commit run mypy --all-files
+
+    test:
+      name: test
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      needs: prepare-base
+      steps:
+        - name: Check out code from GitHub
+          uses: actions/checkout@v3.5.2
+        - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+          id: python
+          uses: actions/setup-python@v4.6.0
+          with:
+            python-version: ${{ env.DEFAULT_PYTHON }}
+            check-latest: true
+        - name: Restore Python virtual environment
+          id: cache-venv
+          uses: actions/cache@v3.3.1
+          with:
+            path: venv
+            fail-on-cache-miss: true
+            key:
+              ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.prepare-base.outputs.python-key }}
+        - name: Install dependencies
+        - name: Run tests
+          run: |
+            . venv/bin/activate
+            python -m pytest
