@@ -17,14 +17,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
       - name: Run pylint
         run: |
           pip install pylint
           pip install -r requirements.txt
           pip install -r requirements_dev.txt
-          pylint "**/*.py"
+          python -m pylint --recursive y .
       - name: Run black
         run: |
           black --check .
