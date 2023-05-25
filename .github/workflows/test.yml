@@ -206,7 +206,6 @@ jobs:
           key:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.prepare-base.outputs.python-key }}
-      - name: Install dependencies
       - name: Run tests
         run: |
           . venv/bin/activate
