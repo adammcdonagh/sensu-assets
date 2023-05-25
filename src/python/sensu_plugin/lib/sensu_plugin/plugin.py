@@ -15,7 +15,8 @@ import traceback
 from collections import namedtuple
 from dataclasses import dataclass
 
-from sensu_plugin import ExitHook, SensuAsset
+from sensu_plugin.asset import SensuAsset
+from sensu_plugin.exithook import ExitHook
 
 # create a namedtuple of all valid exit codes
 ExitCode = namedtuple("ExitCode", ["OK", "WARNING", "CRITICAL", "UNKNOWN"])

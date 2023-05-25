@@ -107,7 +107,7 @@ jobs:
         run: |
           . venv/bin/activate
           pip list | grep 'pylint'
-          pre-commit run --verbose pylint --all-files
+          pre-commit run --hook-stage manual pylint --all-files
 
   black:
     name: black

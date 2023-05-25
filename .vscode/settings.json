@@ -14,7 +14,6 @@
   "python.linting.enabled": true,
   "python.linting.flake8Enabled": true,
   "python.linting.pylintEnabled": true,
-  "python.linting.mypyEnabled": true,
   "python.formatting.provider": "black",
   "files.associations": {
     "*.json": "jsonc"
@@ -34,9 +33,6 @@
   "pylint.severity": {
     "convention": "Warning",
     "info": "Warning"
-  },
-  "python.linting.mypyArgs": [
-    "--config-file",
-    "mypy.ini"
-  ]
+  }
+]
 }

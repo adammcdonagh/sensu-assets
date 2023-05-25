@@ -7,8 +7,8 @@
 import re
 from dataclasses import dataclass
 
-from sensu_plugin import SensuPlugin
 from sensu_plugin.check_result import CheckResultMetadata
+from sensu_plugin.plugin import SensuPlugin
 from sensu_plugin.threshold import Threshold, ThresholdResult
 
 
