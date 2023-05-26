@@ -1,0 +1,359 @@
+{
+  "check": {
+    "command": "metrics_filesystem_utilisation.py {{.labels.metrics_filesystem_utilisation_overrides | default \"\" }}",
+    "handlers": [],
+    "high_flap_threshold": 0,
+    "interval": 10,
+    "low_flap_threshold": 0,
+    "publish": true,
+    "runtime_assets": [
+      "core/linux_os_metrics_v1.0",
+      "core/python_with_requests_v1.0",
+      "core/sensu_plugin_v1.0"
+    ],
+    "subscriptions": [
+      "unix"
+    ],
+    "proxy_entity_name": "",
+    "check_hooks": null,
+    "stdin": false,
+    "subdue": null,
+    "ttl": 0,
+    "timeout": 5,
+    "round_robin": false,
+    "duration": 0.0444835,
+    "executed": 1649852579,
+    "history": [
+      {
+        "status": 2,
+        "executed": 1649852379
+      },
+      {
+        "status": 2,
+        "executed": 1649852389
+      },
+      {
+        "status": 2,
+        "executed": 1649852399
+      },
+      {
+        "status": 2,
+        "executed": 1649852409
+      },
+      {
+        "status": 2,
+        "executed": 1649852419
+      },
+      {
+        "status": 2,
+        "executed": 1649852429
+      },
+      {
+        "status": 2,
+        "executed": 1649852439
+      },
+      {
+        "status": 2,
+        "executed": 1649852449
+      },
+      {
+        "status": 2,
+        "executed": 1649852459
+      },
+      {
+        "status": 2,
+        "executed": 1649852469
+      },
+      {
+        "status": 2,
+        "executed": 1649852479
+      },
+      {
+        "status": 2,
+        "executed": 1649852489
+      },
+      {
+        "status": 2,
+        "executed": 1649852499
+      },
+      {
+        "status": 2,
+        "executed": 1649852509
+      },
+      {
+        "status": 2,
+        "executed": 1649852519
+      },
+      {
+        "status": 2,
+        "executed": 1649852529
+      },
+      {
+        "status": 2,
+        "executed": 1649852539
+      },
+      {
+        "status": 2,
+        "executed": 1649852549
+      },
+      {
+        "status": 2,
+        "executed": 1649852559
+      },
+      {
+        "status": 2,
+        "executed": 1649852569
+      },
+      {
+        "status": 2,
+        "executed": 1649852579
+      }
+    ],
+    "issued": 1649852579,
+    "output": "os.filesystem.used_bytes;filesystem=/etc/resolv.conf 49306640384 1649852579\nos.filesystem.free_bytes;filesystem=/etc/resolv.conf 10202267648 1649852579\nos.filesystem.used_percent;filesystem=/etc/resolv.conf 82.8558984101777 1649852579\nLinuxFilesystemMetrics OK: Filesystem usage for /etc/resolv.conf is OK (82.9% used) | KEY:/etc/resolv.conf \nos.filesystem.used_bytes;filesystem=/etc/hostname 49306640384 1649852579\nos.filesystem.free_bytes;filesystem=/etc/hostname 10202267648 1649852579\nos.filesystem.used_percent;filesystem=/etc/hostname 82.8558984101777 1649852579\nLinuxFilesystemMetrics OK: Filesystem usage for /etc/hostname is OK (82.9% used) | KEY:/etc/hostname \nos.filesystem.used_bytes;filesystem=/etc/hosts 49306640384 1649852579\nos.filesystem.free_bytes;filesystem=/etc/hosts 10202267648 1649852579\nos.filesystem.used_percent;filesystem=/etc/hosts 82.8558984101777 1649852579\nLinuxFilesystemMetrics OK: Filesystem usage for /etc/hosts is OK (82.9% used) | KEY:/etc/hosts \nos.filesystem.used_bytes;filesystem=/var/lib/sensu 49306640384 1649852579\nos.filesystem.free_bytes;filesystem=/var/lib/sensu 10202267648 1649852579\nos.filesystem.used_percent;filesystem=/var/lib/sensu 82.8558984101777 1649852579\nLinuxFilesystemMetrics CRITICAL: Filesystem usage for /var/lib/sensu \u003e 20% (82.9%) | KEY:/var/lib/sensu SEV:Critical TEAM:SysAut \nLinuxFilesystemMetrics OK: Some filesystems exceed the threshold\n",
+    "state": "failing",
+    "status": 2,
+    "total_state_change": 0,
+    "last_ok": 1649852299,
+    "occurrences": 28,
+    "occurrences_watermark": 28,
+    "output_metric_format": "graphite_plaintext",
+    "output_metric_handlers": [
+      "handler_graphite"
+    ],
+    "env_vars": null,
+    "metadata": {
+      "name": "check_linux_filesystems",
+      "namespace": "default",
+      "labels": {
+        "sensu.io/managed_by": "sensuctl"
+      }
+    },
+    "secrets": null,
+    "is_silenced": false,
+    "output_metric_tags": [
+      {
+        "name": "instance",
+        "value": "agent1.local"
+      }
+    ],
+    "scheduler": "memory",
+    "processed_by": "agent1.local",
+    "pipelines": []
+  },
+  "metrics": {
+    "handlers": [
+      "handler_graphite"
+    ],
+    "points": [
+      {
+        "name": "os.filesystem.used_bytes;filesystem=/etc/resolv.conf",
+        "value": 49306640384,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.free_bytes;filesystem=/etc/resolv.conf",
+        "value": 10202267648,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.used_percent;filesystem=/etc/resolv.conf",
+        "value": 82.8558984101777,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.used_bytes;filesystem=/etc/hostname",
+        "value": 49306640384,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.free_bytes;filesystem=/etc/hostname",
+        "value": 10202267648,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.used_percent;filesystem=/etc/hostname",
+        "value": 82.8558984101777,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.used_bytes;filesystem=/etc/hosts",
+        "value": 49306640384,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.free_bytes;filesystem=/etc/hosts",
+        "value": 10202267648,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.used_percent;filesystem=/etc/hosts",
+        "value": 82.8558984101777,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.used_bytes;filesystem=/var/lib/sensu",
+        "value": 49306640384,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.free_bytes;filesystem=/var/lib/sensu",
+        "value": 10202267648,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      },
+      {
+        "name": "os.filesystem.used_percent;filesystem=/var/lib/sensu",
+        "value": 82.8558984101777,
+        "timestamp": 1649852579,
+        "tags": [
+          {
+            "name": "instance",
+            "value": "agent1.local"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "namespace": "default"
+  },
+  "id": "dc504282-ee84-49c4-824b-70d8c19e61d1",
+  "sequence": 41,
+  "pipelines": null,
+  "timestamp": 1649852579,
+  "entity": {
+    "entity_class": "agent",
+    "system": {
+      "hostname": "test-agent.local",
+      "os": "linux",
+      "platform": "alpine",
+      "platform_family": "alpine",
+      "platform_version": "3.12.9",
+      "network": {
+        "interfaces": [
+          {
+            "name": "lo",
+            "addresses": [
+              "127.0.0.1/8"
+            ]
+          },
+          {
+            "name": "tunl0",
+            "addresses": null
+          },
+          {
+            "name": "ip6tnl0",
+            "addresses": null
+          },
+          {
+            "name": "eth0",
+            "mac": "02:42:ac:13:00:06",
+            "addresses": [
+              "172.19.0.6/16"
+            ]
+          }
+        ]
+      },
+      "arch": "arm64",
+      "libc_type": "musl",
+      "vm_system": "",
+      "vm_role": "guest",
+      "cloud_provider": "",
+      "processes": null
+    },
+    "subscriptions": [
+      "unix",
+      "entity:agent1.local"
+    ],
+    "last_seen": 1649852579,
+    "deregister": false,
+    "deregistration": {},
+    "user": "agent",
+    "redact": [
+      "password",
+      "passwd",
+      "pass",
+      "api_key",
+      "api_token",
+      "access_key",
+      "secret_key",
+      "private_key",
+      "secret"
+    ],
+    "metadata": {
+      "name": "test-agent.local",
+      "namespace": "default",
+      "labels": {
+        "metrics_filesystem_utilisation_overrides": "--filesystem_override /var/lib/sensu,Y,10,20,SysAut,Crit",
+        "environment": "prod"
+      }
+    },
+    "sensu_agent_version": "6.6.6"
+  }
+}

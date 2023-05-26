@@ -29,5 +29,5 @@ for ASSET_METADATA_FILE in $ASSET_METADATA_FILES; do
         echo "Skipping $ASSET_METADATA_FILE"
     fi
 
-    
+
 done

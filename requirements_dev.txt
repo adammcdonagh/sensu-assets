@@ -4,6 +4,10 @@ pep8-naming
 flake8-use-fstring
 flake8-black
 flake8-isort
-flake8-pylint
+flake8-docstrings
+pylint
 pytest
 freezegun
+localstack>=2.0.2
+pydantic
+mypy

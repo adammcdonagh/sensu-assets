@@ -1,11 +1,19 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Basic script to collect filesystem metrics on Unix systems and generate alerts or metric output for Sensu.
 
+This is compatible with *nix systems only (not Windows).
+"""
 import argparse
 import json
 import logging
 import os
+import platform
 import re
 import shutil
+import subprocess
+import textwrap
 
 from sensu_plugin import SensuPluginCheck, Threshold
 
@@ -15,9 +23,14 @@ FILESYSTEM_OVERRIDE_REGEX = (
 
 
 class LinuxFilesystemMetrics(SensuPluginCheck):
-    def setup(self):
-        # Setup is called with self.parser set and is responsible for setting up
-        # self.options before the run method is called
+    """Class that collects filesystem metrics on Linux."""
+
+    def setup(self) -> None:
+        """Set up arguments.
+
+        Setup is called with self.parser set and is responsible for setting up
+        self.options before the run method is called
+        """
         self.parser.add_argument(
             "-v",
             "--verbose",
@@ -33,6 +46,7 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
             help="output metrics only",
             action="store_true",
         )
+
         self.parser.add_argument(
             "-c",
             "--check_only",
@@ -40,6 +54,7 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
             help="output check result only",
             action="store_true",
         )
+
         self.parser.add_argument(
             "--default_warn",
             required=False,
@@ -86,13 +101,21 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
             default="/var/cache/sensu/sensu-agent/filesystems.json",
         )
 
-    def run(self):
+        self.parser.description = textwrap.dedent(
+            """
+                IMPORTANT:
+                The thresholds_file should be a JSON file containing a list of threshold overrides.
+
+                If no thresholds_file is defined, and no default_warn or default_crit is defined, then no thresholds will be checked, and the check will always return OK
+            """
+        )
+
+    def run(self) -> None:
+        """Run the actual check."""
         if self.options.verbose:
-            logging.getLogger().setLevel(logging.DEBUG)
+            self.logger.setLevel(logging.DEBUG)
 
-        # this method is called to perform the actual check
-
-        # self.check_name("my_awesome_check")  # defaults to class name
+        self.logger.debug("Running LinuxFilesystemMetrics")
 
         # Load default thresholds
         # This script just has 1 set of thresholds by default - The warn percent and crit percent
@@ -104,33 +127,92 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
         )
         self.thresholds.append(threshold)
 
+        self._process_thresholds_file()
+
+        rc = 0
+        result_message = "Check ran OK"
+
+        # Determine the OS
+        mounts = []
+        filesystem_column_index = 0
+        mount_column_index = 0
+        if platform.system() == "Linux":
+            filesystem_column_index = 2
+            mount_column_index = 1
+            with open("/proc/mounts", "r", encoding="utf-8") as file_:
+                mounts = file_.readlines()
+        elif platform.system() == "Darwin":
+            filesystem_column_index = 3
+            mount_column_index = 2
+            mounts = (
+                subprocess.run(["mount"], stdout=subprocess.PIPE, check=True)
+                .stdout.decode("utf-8")
+                .splitlines()
+            )
+
+        for line in mounts:
+            line_split = line.split(" ", maxsplit=3)
+            mount_point = line_split[mount_column_index]
+            filesystem_type = line_split[filesystem_column_index]
+            if re.search(r"(ext[0-9]|zfs|apfs)", filesystem_type):
+                _, used, free = shutil.disk_usage(mount_point)
+                used_percent = used / (free + used) * 100
+
+                if not self.options.check_only or self.options.metrics_only:
+                    self.output_metrics(
+                        [f"os.filesystem.used_bytes;filesystem={mount_point}", used]
+                    )
+                    self.output_metrics(
+                        [f"os.filesystem.free_bytes;filesystem={mount_point}", free]
+                    )
+                    self.output_metrics(
+                        [
+                            f"os.filesystem.used_percent;filesystem={mount_point}",
+                            used_percent,
+                        ]
+                    )
+
+                if not self.options.metrics_only or self.options.check_only:
+                    # Determine thresholds
+                    # Pass to threshold handler
+                    threshold_result = self.process_value(
+                        mount_point,
+                        used_percent,
+                        ok_message=f"Filesystem usage for {mount_point} is OK ({used_percent:.3g}::ALERT_TYPE:: used)",
+                        alert_message=f"Filesystem usage for {mount_point} > ::THRESHOLD::::ALERT_TYPE:: ({used_percent:.3g}::ALERT_TYPE:: used)",
+                        alert_type="%",
+                    )
+                    result_message, rc = self.process_output_and_rc(
+                        threshold_result,
+                        result_message,
+                        "Some filesystems exceed the threshold",
+                    )
+        self.return_final_output(rc, result_message)
+
+    def _process_thresholds_file(self) -> None:  # pylint: disable=too-many-branches
         # Handle any threshold overrides
         if os.path.exists(self.options.thresholds_file):
-            with open(self.options.thresholds_file) as file:
+            with open(self.options.thresholds_file, mode="r", encoding="utf-8") as file:
                 json_file = json.load(file)
                 for threshold in json_file:
                     logging.debug(threshold)
                     # Create threshold object
-                    kwargs = {"id": threshold["id"], "ignore": threshold["ignore"]}
-                    if "warn_threshold" in threshold:
-                        kwargs["warn_threshold"] = threshold["warn_threshold"]
-                    if "crit_threshold" in threshold:
-                        kwargs["crit_threshold"] = threshold["crit_threshold"]
-                    if "team" in threshold:
-                        kwargs["team"] = threshold["team"]
-                    if "min_severity" in threshold:
-                        kwargs["min_severity"] = threshold["min_severity"]
+                    kwargs = {
+                        "id": threshold["id"],
+                        "ignore": threshold["ignore"]
+                        if "ignore" in threshold
+                        else False,
+                    }
+                    args = ("warn_threshold", "crit_threshold", "team", "min_severity")
+                    for arg in args:
+                        if arg in threshold:
+                            kwargs[arg] = threshold[arg]
 
-                    if "warn_time_period" in threshold:
-                        # Convert time period to seconds
-                        kwargs["warn_time_seconds"] = self.map_time_period_to_seconds(
-                            threshold["warn_time_period"]
-                        )
-                    if "crit_time_period" in threshold:
-                        # Convert time period to seconds
-                        kwargs["crit_time_seconds"] = self.map_time_period_to_seconds(
-                            threshold["crit_time_period"]
-                        )
+                    for arg in ("warn_time_period", "crit_time_period"):
+                        if arg in threshold:
+                            kwargs[arg] = Threshold.map_time_period_to_seconds(
+                                threshold[arg]
+                            )
 
                     # Create a threshold object
                     threshold = Threshold(**kwargs)
@@ -141,65 +223,39 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
             logging.debug("Handling custom thresholds")
             for override in self.options.filesystem_override:
                 # Pull out the useful info from the override (we know it matches the regex, as it passed the argparse check)
-                groups = re.match(FILESYSTEM_OVERRIDE_REGEX, override).groups()
-                kwargs = {"id": groups[0], "ignore": groups[1]}
-                if len(groups) > 2:
-                    kwargs["warn_threshold"] = groups[2]
-                if len(groups) > 3:
-                    kwargs["crit_threshold"] = groups[3]
-                if len(groups) > 4:
-                    kwargs["team"] = groups[4]
-                if len(groups) > 5:
-                    kwargs["min_severity"] = groups[5]
+                kwargs = {}
+                if match_ := re.match(FILESYSTEM_OVERRIDE_REGEX, override):
+                    groups = match_.groups()
+                    kwargs = {"id": groups[0], "ignore": groups[1]}
+                    if len(groups) > 2:
+                        kwargs["warn_threshold"] = groups[2]
+                    if len(groups) > 3:
+                        kwargs["crit_threshold"] = groups[3]
+                    if len(groups) > 4:
+                        kwargs["team"] = groups[4]
+                    if len(groups) > 5:
+                        kwargs["min_severity"] = groups[5]
 
                 # Create a threshold object
                 threshold = Threshold(**kwargs)
                 self.thresholds.append(threshold)
 
-        rc = 0
-        result_message = "Check ran OK"
 
-        with open("/proc/mounts", "r") as f:
-            for line in f.readlines():
-                _, mount_point, filesystem_type, _ = line.split(" ", maxsplit=3)
-                if re.match(r"(ext[0-9]|zfs)", filesystem_type):
-                    total, used, free = shutil.disk_usage(mount_point)
-                    used_percent = used / (free + used) * 100
+def filesystem_override_type(
+    arg_value: str, pat: re.Pattern = re.compile(FILESYSTEM_OVERRIDE_REGEX)
+) -> str:
+    """Validate the filesystem override argument.
 
-                    if not self.options.check_only or self.options.metrics_only:
-                        self.output_metrics(
-                            [f"os.filesystem.used_bytes;filesystem={mount_point}", used]
-                        )
-                        self.output_metrics(
-                            [f"os.filesystem.free_bytes;filesystem={mount_point}", free]
-                        )
-                        self.output_metrics(
-                            [
-                                f"os.filesystem.used_percent;filesystem={mount_point}",
-                                used_percent,
-                            ]
-                        )
+    Args:
+        arg_value (str): The argument value to validate
+        pat (re.Pattern, optional): The regex pattern to use. Defaults to re.compile(FILESYSTEM_OVERRIDE_REGEX).
 
-                    if not self.options.metrics_only or self.options.check_only:
-                        # Determine thresholds
-                        # Pass to threshold handler
-                        threshold_result = self.process_value(
-                            mount_point,
-                            used_percent,
-                            ok_message=f"Filesystem usage for {mount_point} is OK ({used_percent:.3g}::ALERT_TYPE:: used)",
-                            alert_message=f"Filesystem usage for {mount_point} > ::THRESHOLD::::ALERT_TYPE:: ({used_percent:.3g}::ALERT_TYPE:: used)",
-                            alert_type="%",
-                        )
-                        result_message, rc = self.process_output_and_rc(
-                            threshold_result,
-                            result_message,
-                            "Some filesystems exceed the threshold",
-                        )
+    Raises:
+        argparse.ArgumentTypeError: If the argument does not match the regex
 
-        self.return_final_output(rc, result_message)
-
-
-def filesystem_override_type(arg_value, pat=re.compile(FILESYSTEM_OVERRIDE_REGEX)):
+    Returns:
+        str: The argument value
+    """
     if not pat.match(arg_value):
         raise argparse.ArgumentTypeError(
             "Argument must match <FILESYSTEM>,[Y|N](,<low threshold>(,<high threshold>(,<team>(,<severity>))))"
@@ -208,4 +264,4 @@ def filesystem_override_type(arg_value, pat=re.compile(FILESYSTEM_OVERRIDE_REGEX
 
 
 if __name__ == "__main__":
-    rc = LinuxFilesystemMetrics()
+    LinuxFilesystemMetrics()

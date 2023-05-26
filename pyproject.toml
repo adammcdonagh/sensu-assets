@@ -1,15 +1,41 @@
 [tool.isort]
 profile = 'black'
 
-[tool.pylint."LOGGING"]
-disable=[
-  "logging-fstring-interpolation"
+[tool.pylint.BASIC]
+ignore = [
+    "tests",
+]
+ignore-paths = [
+    "src/python/my_simple_asset",
+    "src/python/example_asset",
 ]
 
-[tool.pylint."BASE"]
-disable=[
-  "invalid-name",
-  "missing-module-docstring",
-  "missing-function-docstring",
-  "line-too-long" # black takes care of this
+init-hook='import sys; sys.path.append("src/python/sensu_plugin/lib")'
+
+load-plugins = [
+    "pylint.extensions.code_style",
+    "pylint.extensions.typing",
 ]
+
+class-const-naming-style = "any"
+
+good-names = [
+    "id",
+    "_",
+    "ip",
+    "rc"
+]
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "format",
+    "line-too-long",
+    "import-error",
+    "logging-fstring-interpolation",
+]
+
+[tool.pylint."SIMILARITY"]
+min-similarity-lines = 50
+
+[tool.pylint."DESIGN"]
+max-locals = 20

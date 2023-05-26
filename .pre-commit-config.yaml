@@ -10,3 +10,33 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
+      - id: black
+        stages: [manual]
+        args: [--check]
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-bugbear
+          - pep8-naming
+          - flake8-use-fstring
+          - flake8-isort
+          - flake8-docstrings
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+        args: ["-rn", "-sn", "--fail-on=I"]
+        files: src/python/.+\.py$
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: python
+        types: [python]
+        args: ["--config-file", "mypy.ini"]
+        require_serial: true
+        files: ^src/python/.+\.py$

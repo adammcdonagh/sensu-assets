@@ -5,3 +5,12 @@ extend-ignore = W503
 exclude =
   .venv,
   build/*/bin/*.py
+
+per-file-ignores =
+  src/python/sensu_plugin/lib/sensu_plugin/__init__.py:F401
+  tests/*/__init__.py:F401
+  tests/*/test_*.py:PLW621,PLW613
+  src/python/*/both*.py:PLC115
+  src/python/*/report*.py:PLC115
+  src/python/*/check*.py:PLC115
+  src/python/*/metrics*.py:PLC115
