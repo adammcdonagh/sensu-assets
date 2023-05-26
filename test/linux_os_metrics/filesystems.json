@@ -1,0 +1,16 @@
+[
+  {
+    "id": "/vscode",
+    "ignore": "Y"
+  },
+  {
+    "id": "/workspaces",
+    "warn_threshold": "10"
+  },
+  {
+    "id": "/etc/hosts",
+    "ignore": "Y",
+    "warn_threshold": "90",
+    "crit_threshold": "99"
+  }
+]
