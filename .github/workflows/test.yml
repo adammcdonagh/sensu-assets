@@ -263,7 +263,7 @@ jobs:
       - name: Run check-json5
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual check-json --all-files
+          pre-commit run --hook-stage manual check-json5 --all-files
 
       - name: Register check executables problem matcher
         run: |
