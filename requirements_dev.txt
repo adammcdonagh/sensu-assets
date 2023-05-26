@@ -1,3 +1,2 @@
 -r requirements_test_pre_commit.txt
--r requirements.txt
 localstack>=2.0.2
