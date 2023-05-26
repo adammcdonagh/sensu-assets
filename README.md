@@ -9,7 +9,7 @@ See the [sensu-asset-builder](https://github.com/adammcdonagh/sensu-asset-builde
 ## Metadata
 
 The below assumes the use of the sensu-asset-builder code to actually build the assets.
- 
+
 Each asset needs to have it's own metadata. This is so that when building, and dependencies can be downloaded, as well as defining different operating systems (where packages may need compiling).
 
 Below is an example `asset_metadata.json` file for an example asset:
@@ -46,6 +46,6 @@ Below is an example `asset_metadata.json` file for an example asset:
 }
 ```
 
-The `platform_family` and `platform_version` attributes define how the operating system used to build the assets, and determine which docker image will be used. 
+The `platform_family` and `platform_version` attributes define how the operating system used to build the assets, and determine which docker image will be used.
 
 The `sensu_filters` attribute uses [Sensu query expressions](https://docs.sensu.io/sensu-go/latest/observability-pipeline/observe-filter/sensu-query-expressions/) to specify which Sensu agents each asset package will be deployed to, and hence which ones will be built. This is only important when there are compiled files within the package, and is unnecessary if the asset contains just a simple script.
