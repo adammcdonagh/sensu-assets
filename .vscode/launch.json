@@ -71,6 +71,6 @@
         "AWS_DEFAULT_REGION": "eu-west-2",
         "SENSU_ASSET_LOG_FILE_PATH": "/tmp/sqs.log"
       }
-    },
+    }
   ]
 }

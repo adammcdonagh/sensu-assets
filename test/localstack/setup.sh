@@ -29,7 +29,7 @@ aws ${ENDPOINT_URL} sqs get-queue-url --queue-name sensu-alerts.fifo > /dev/null
 if [ $? -eq 0 ]; then
   echo "Queue sensu-alerts.fifo already exists"
 else
-  # Wriet queue attributes to a temporary JSON file
+  # Write queue attributes to a temporary JSON file
   cat << EOF > /tmp/queue_attributes.json
 {
   "MessageRetentionPeriod": "3600",

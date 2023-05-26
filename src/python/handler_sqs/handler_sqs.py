@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Sensu Handler for pushing events into an SQS queue for processing."""
 
 import argparse
@@ -21,7 +20,9 @@ SEVERITY_MAP = {"Clear": 9, "Minor": 3, "Major": 4, "Critical": 5}
 
 # Regexes for handling known line formats from Sensu check results
 ALERT_LINE_PATTERN = re.compile(
-    r"^(?P<monitor_name>[^\s]+) (?:WARN|CRITICAL|CRIT|OK): (?P<summary>.*?) \| (?:KEY:(?P<key>.*?)) (?:SEV:(?P<severity>Major|Minor|Crit(?:ical)*|Clear))*(?: (?:TEAM:(.*?)))*(?: (?:SOURCE:(.*?)))*$"
+    r"^(?P<monitor_name>[^\s]+) (?:WARN|CRITICAL|CRIT|OK): (?P<summary>.*?) \|"
+    r" (?:KEY:(?P<key>.*?)) (?:SEV:(?P<severity>Major|Minor|Crit(?:ical)*|Clear))*(?:"
+    r" (?:TEAM:(.*?)))*(?: (?:SOURCE:(.*?)))*$"
 )
 SUCCESS_LINE_PATTERN = re.compile(r"^(?P<monitor_name>[^\s]+) OK: (?P<summary>.*?)$")
 
@@ -34,7 +35,11 @@ GRAPHITE_LINE_PATTERN = re.compile(r"^([^\s]+) ([^\s]+) \d+$")
 
 
 class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
-    """This class handles incoming events from Sensu, processes them based on severity and previous state (stored in DynamoDB) and forwards them to an SQS queue."""
+    """Handles incoming events from Sensu and passes to SQS.
+
+    This class handles incoming events from Sensu, processes them based on severity
+    and previous state (stored in DynamoDB) and forwards them to an SQS queue.
+    """
 
     def __init__(self) -> None:
         """Initialise the class."""
@@ -66,7 +71,10 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
             "-u",
             "--aws_endpoint_url",
             required=True,
-            help="AWS endpoint URL (can also be specified via AWS_ENDPOINT_URL environment variable)",
+            help=(
+                "AWS endpoint URL (can also be specified via AWS_ENDPOINT_URL"
+                " environment variable)"
+            ),
             action=EnvDefault,
             envvar="AWS_ENDPOINT_URL",
         )
@@ -75,7 +83,10 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
             "-t",
             "--dynamodb_table",
             required=True,
-            help="DynamoDB table to store state (can also be specified via DYNAMODB_TABLE environment variable)",
+            help=(
+                "DynamoDB table to store state (can also be specified via"
+                " DYNAMODB_TABLE environment variable)"
+            ),
             action=EnvDefault,
             envvar="DYNAMODB_TABLE",
         )
@@ -84,7 +95,10 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
             "-q",
             "--sqs_queue",
             required=True,
-            help="SQS queue to send events to (can also be specified via SQS_QUEUE environment variable)",
+            help=(
+                "SQS queue to send events to (can also be specified via SQS_QUEUE"
+                " environment variable)"
+            ),
             action=EnvDefault,
             envvar="SQS_QUEUE",
         )
@@ -114,7 +128,9 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
         stdin_event = "".join(sys.stdin.readlines())
 
         # Write STDIN to /tmp
-        with open("/tmp/event.json", "w", encoding="utf-8") as file_handle:
+        with open(
+            "/tmp/event.json", "w", encoding="utf-8"  # nosec B108
+        ) as file_handle:
             file_handle.write(stdin_event)
 
         # Parse the event into JSON format
@@ -149,11 +165,12 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
             # Alert key for this line
             alert_key = f"{alert_attributes['monitor_name']}_{alert_attributes['key']}_{alert_attributes['source']}"
 
-            # BEFORE sending anything, we need to determine exactly what to send based on the status of the message
+            # BEFORE sending anything, we need to determine exactly what to send based
+            # on the status of the message
 
             # Check in DynamoDB for a matching key
             skip_alert = False
-            self.logger.debug(f"Seaching DynamoDB for {alert_key}")
+            self.logger.debug(f"Searching DynamoDB for {alert_key}")
             table_item = self.ddb_table.get_item(Key={"alert_key": alert_key})
 
             skip_alert = self._handle_existing_alert(
@@ -258,17 +275,21 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
             return None
 
         if alert_line_match:
-            # Standard alert line. Use the named variables in the regex to map to the alert attributes
+            # Standard alert line. Use the named variables in the regex to map to the
+            # alert attributes
             alert_attributes = alert_line_match.groupdict()
 
-            # Alter the key so that it doesnt contain any forward slashes
+            # Alter the key so that it doesn't contain any forward slashes
             alert_attributes["key"] = alert_attributes["key"].replace("/", "_")
         elif success_line_match:
             return None
         elif no_keepalive_line_match:
             alert_attributes["summary"] = (
                 "Sensu agent offline ",
-                f"- No communication for {(float(no_keepalive_line_match.group(1))/60):.1f} mins",
+                (
+                    "- No communication for"
+                    f" {(float(no_keepalive_line_match.group(1))/60):.1f} mins"
+                ),
             )
             alert_attributes["monitor_name"] = "keepalive"
             alert_attributes["team"] = self.args.offline_agent_responsible_team
@@ -291,7 +312,10 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
 
             alert_attributes["summary"] = (
                 f"Timeout running - {event_object['check']['metadata']['name']} ",
-                f"- Monitor frequency is: {(float(event_object['check']['interval'])/60):.1f} mins.",
+                (
+                    "- Monitor frequency is:"
+                    f" {(float(event_object['check']['interval'])/60):.1f} mins."
+                ),
             )
             alert_attributes["monitor_name"] = "timeout"
             alert_attributes["key"] = event_object["check"]["metadata"]["name"]
@@ -359,21 +383,28 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
     def _handle_existing_alert(
         self, table_item: dict, alert_attributes: dict, alert_key: str
     ) -> bool:
-        """
-        If there's an existing alert in the database with the same alert_key, then we need to determine what to do with it.
+        """Handles an existing alert in the DB.
 
-            If the severity is different to the previous alert, then we need to clear the previous alert before the new one is sent
+        If there's an existing alert in the database with the same alert_key, then we
+        need to determine what to do with it.
+
+            If the severity is different to the previous alert, then we need to clear
+            the previous alert before the new one is sent
 
             If the alert is a clear, the alert needs to be deleted from the database
 
-            If it isn't clear, then we will update the existing entry so that the TTL is reset/extended, and severity updated to match the current state
+            If it isn't clear, then we will update the existing entry so that the TTL is
+            reset/extended, and severity updated to match the current state
 
         If there is no previous alert:
 
             If the alert is not a clear, then we need to insert it into the database
 
-            Otherwise, if it's not the Sensu Heartbeat and not a MetricsStatus result, then we need to skip it, and it would have already been cleared (because it's not in the database)
-                If it is the Sensu Heartbeat, then we will still send it, but we change the severity to Info
+            Otherwise, if it's not the Sensu Heartbeat and not a MetricsStatus result,
+            then we need to skip it, and it would have already been cleared (because
+            it's not in the database)
+                If it is the Sensu Heartbeat, then we will still send it, but we change
+                the severity to Info
 
         Returns True if the alert should be skipped, False if it should be sent
         """
@@ -381,10 +412,12 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
         if "Item" in table_item:
             existing_event = table_item["Item"]
             logging.debug(
-                f"Found existing entry with severity {existing_event['severity']}. Current severity is {alert_attributes['severity']}"
+                f"Found existing entry with severity {existing_event['severity']}."
+                f" Current severity is {alert_attributes['severity']}"
             )
 
-            # If the previous severity is different, and the new severity isn't a clear, send a clear for the previous severity
+            # If the previous severity is different, and the new severity isn't a clear,
+            # send a clear for the previous severity
             if (
                 existing_event["severity"] != alert_attributes["severity"]
                 and alert_attributes["severity"] != "Clear"
@@ -392,7 +425,8 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
                 logging.debug(
                     f"Sending clear for original {existing_event['severity']} severity"
                 )
-                # Take a copy of the existing event, so we can set it to clear and send it
+                # Take a copy of the existing event, so we can set it to clear and
+                # send it
                 cloned_attributes = deepcopy(alert_attributes)
                 cloned_attributes["severity"] = "Clear"
                 send_response = self._send_to_sqs(
@@ -411,7 +445,7 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
                 self._put_event_in_db(self.ddb_table, alert_key, alert_attributes)
 
         else:
-            # If this isnt a clear, we need to
+            # If this isn't a clear, we need to
             #  insert a new value into the DB
 
             if alert_attributes["severity"] != "Clear":
@@ -426,7 +460,7 @@ class HandlerSQS(SensuAsset):  # pylint: disable=too-few-public-methods
                     logging.debug("Skipping sending trap for already cleared alert")
                     skip_alert = True
                 elif alert_attributes["monitor_name"] == "SensuHB":
-                    # Severity always needs to be at Info level so it doesnt clear
+                    # Severity always needs to be at Info level so it doesn't clear
                     alert_attributes["severity"] = "Info"
 
         return skip_alert

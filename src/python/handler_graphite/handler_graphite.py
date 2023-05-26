@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Sensu Handler for pushing metrics to Graphite."""
 import argparse
 import json
@@ -67,7 +66,9 @@ class HandlerGraphite(SensuAsset):  # pylint: disable=too-few-public-methods
             socket_.connect((self.args.host, int(self.args.port)))
 
             # Write STDIN to /tmp
-            with open("/tmp/event.json", "w", encoding="utf-8") as tmp_file:
+            with open(
+                "/tmp/event.json", "w", encoding="utf-8"  # nosec B108
+            ) as tmp_file:
                 tmp_file.write(stdin_event)
 
             # Parse the event into JSON format

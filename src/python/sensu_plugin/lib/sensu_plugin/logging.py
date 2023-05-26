@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# ruff: noqa: T201
 """Simple logging module for the Sensu plugin.
 
 This includes the ability to write to a log file using an
@@ -47,8 +47,7 @@ class CustomFormatter(logging.Formatter):
 
 
 def init_logging(name: str, log_level: int = logging.INFO) -> logging.Logger:
-    """
-    Initialize logging for the script.
+    """Initialize logging for the script.
 
     Args:
         name (str): The name of the logger
@@ -109,8 +108,7 @@ def _check_log_file_path(log_file_path: str) -> bool:
 
 
 def write_log_file(log_message: str) -> None:
-    """
-    Write a log message to the log file.
+    """Write a log message to the log file.
 
     Args:
         log_message (str): The message to write to the log file

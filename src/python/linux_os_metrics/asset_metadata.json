@@ -6,9 +6,7 @@
   "python_version": "3.9.10",
   "requirements": [],
   "runtime": "vanilla",
-  "requires_assets": [
-    "core/sensu_plugin"
-  ],
+  "requires_assets": ["core/sensu_plugin"],
   "test_command": "both_cpu_utilisation.py --help",
   "systems": [
     {
