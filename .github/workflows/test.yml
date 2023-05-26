@@ -37,7 +37,7 @@ jobs:
         id: generate-python-key
         run: >-
           echo "key=${{ env.KEY_PREFIX }}-${{ env.CACHE_VERSION }}-${{
-            hashFiles('pyproject.toml', 'requirements_dev.txt',
+            hashFiles('pyproject.toml', 'requirements_test_pre_commit.txt',
           'requirements.txt') }}" >>
           $GITHUB_OUTPUT
       - name: Restore Python virtual environment
@@ -54,8 +54,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python -m pip install -U pip setuptools wheel
-          pip install -U -r requirements_dev.txt
-          pip install -U -r requirements.txt
+          pip install -U -r requirements_test_pre_commit.txt
       - name: Generate pre-commit restore key
         id: generate-pre-commit-key
         run: >-

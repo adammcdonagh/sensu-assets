@@ -1,0 +1,8 @@
+pre-commit
+pylint
+pytest
+freezegun
+pydantic
+mypy
+ruff
+black
