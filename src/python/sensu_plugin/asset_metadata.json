@@ -4,9 +4,7 @@
   "version": "1.0",
   "type": "python",
   "python_version": "3.9.10",
-  "requirements": [
-    "humanize"
-  ],
+  "requirements": ["humanize"],
   "runtime": "vanilla",
   "systems": [
     {

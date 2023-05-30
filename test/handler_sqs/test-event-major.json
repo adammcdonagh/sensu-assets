@@ -11,9 +11,7 @@
       "core/python_with_requests_v1.0",
       "core/sensu_plugin_v1.0"
     ],
-    "subscriptions": [
-      "unix"
-    ],
+    "subscriptions": ["unix"],
     "proxy_entity_name": "",
     "check_hooks": null,
     "stdin": false,
@@ -118,9 +116,7 @@
     "occurrences": 28,
     "occurrences_watermark": 28,
     "output_metric_format": "graphite_plaintext",
-    "output_metric_handlers": [
-      "handler_graphite"
-    ],
+    "output_metric_handlers": ["handler_graphite"],
     "env_vars": null,
     "metadata": {
       "name": "check_linux_filesystems",
@@ -142,9 +138,7 @@
     "pipelines": []
   },
   "metrics": {
-    "handlers": [
-      "handler_graphite"
-    ],
+    "handlers": ["handler_graphite"],
     "points": [
       {
         "name": "os.filesystem.used_bytes;filesystem=/etc/resolv.conf",
@@ -299,9 +293,7 @@
         "interfaces": [
           {
             "name": "lo",
-            "addresses": [
-              "127.0.0.1/8"
-            ]
+            "addresses": ["127.0.0.1/8"]
           },
           {
             "name": "tunl0",
@@ -314,9 +306,7 @@
           {
             "name": "eth0",
             "mac": "02:42:ac:13:00:06",
-            "addresses": [
-              "172.19.0.6/16"
-            ]
+            "addresses": ["172.19.0.6/16"]
           }
         ]
       },
@@ -327,10 +317,7 @@
       "cloud_provider": "",
       "processes": null
     },
-    "subscriptions": [
-      "unix",
-      "entity:agent1.local"
-    ],
+    "subscriptions": ["unix", "entity:agent1.local"],
     "last_seen": 1649852579,
     "deregister": false,
     "deregistration": {},

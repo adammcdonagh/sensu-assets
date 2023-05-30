@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # pylint: disable=no-member
+# ruff: noqa: T201
 """Class that defined a generic Sensu plugin.
 
 This might be a class that runs checks, or collects metrics.
@@ -53,7 +53,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
             if platform.system() == "Windows":
                 self.SENSU_CACHE_DIR = "C:\\ProgramData\\sensu\\cache\\sensu-agent"
             elif platform.system() == "Darwin":
-                self.SENSU_CACHE_DIR = "/tmp/sensu-agent"
+                self.SENSU_CACHE_DIR = "/tmp/sensu-agent"  # nosec B108
             else:
                 self.SENSU_CACHE_DIR = "/var/cache/sensu/sensu-agent"
 
@@ -73,7 +73,7 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
         if hasattr(self, "setup"):
-            self.setup()  # mypy: ignore-errors # type: ignore
+            self.setup()
         (self.options, self.remain) = self.parser.parse_known_args()
 
         if autorun:
@@ -169,7 +169,8 @@ class SensuPlugin(SensuAsset):  # pylint: disable=too-many-instance-attributes
             sys.exit(1)
         elif self._hook.exception:
             print(  # type: ignore[unreachable] # This is a false positive
-                f"Check failed to run: {sys.last_type}, {traceback.format_tb(sys.last_traceback)} - {self._hook.exception}"
+                f"Check failed to run: {sys.last_type},"
+                f" {traceback.format_tb(sys.last_traceback)} - {self._hook.exception}"
             )
             sys.stdout.flush()
             sys.exit(2)

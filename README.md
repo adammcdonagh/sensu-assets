@@ -2,7 +2,7 @@
 
 This repo contains a connection of basic Sensu assets to that can be used as a base to run a simple Sensu server.
 
-Assets are organised by scrip language, so that assets can be build consistently, and in their own way where necessary
+Assets are organised by script language, so that assets can be build consistently, and in their own way where necessary
 
 See the [sensu-asset-builder](https://github.com/adammcdonagh/sensu-asset-builder) repo for a way to automate the packaging of these scripts into actual Sensu assets that can be directly imported into Sensu.
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # pylint: disable=redefined-outer-name,unused-argument
 # mypy: disable-error-code="arg-type"
 """Tests for the SensuPluginCheck class."""
@@ -235,7 +234,7 @@ def test_advanced_warn_threshold_occurrences(
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
-    # Run the check once, check that it doesnt error
+    # Run the check once, check that it doesn't error
     test_values = [
         {
             "current_value": 10,
@@ -247,7 +246,7 @@ def test_advanced_warn_threshold_occurrences(
     logging.info("Testing occurrence 1")
     run_process_value_check(test_values, test_check, ">=")
 
-    # Run the checks a second time, also check it doesnt error
+    # Run the checks a second time, also check it doesn't error
     test_values = [
         {
             "current_value": 10,
@@ -291,7 +290,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
-    # Run the check once, check that it doesnt error
+    # Run the check once, check that it doesn't error
 
     test_values = [
         {
@@ -304,7 +303,7 @@ def test_advanced_warn_and_crit_threshold_occurrences(
     logging.info("Testing occurrence 1")
     run_process_value_check(test_values, test_check, ">=")
 
-    # Run the checks a second time, also check it doesnt error
+    # Run the checks a second time, also check it doesn't error
     test_values = [
         {
             "current_value": 10,
@@ -399,7 +398,7 @@ def test_advanced_warn_threshold_time(
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
-    # Run the check once, check that it doesnt error
+    # Run the check once, check that it doesn't error
     test_values = [
         {
             "current_value": 10,
@@ -448,7 +447,7 @@ def test_advanced_warn_and_crit_threshold_time(
     threshold = Threshold(**kwargs)
     test_check.thresholds = [threshold]
 
-    # Run the check once, check that it doesnt error
+    # Run the check once, check that it doesn't error
     test_values = [
         {
             "current_value": 11,
@@ -530,7 +529,7 @@ def test_advanced_warn_threshold_x_in_y(
     )
 
     with freeze_time(initial_datetime) as frozen_datetime:
-        # Run the check once, check that it doesnt error
+        # Run the check once, check that it doesn't error
         test_values = [
             {
                 "current_value": 10,
@@ -544,7 +543,7 @@ def test_advanced_warn_threshold_x_in_y(
         # Advance the clock by 1 second
         frozen_datetime.tick()
 
-        # Trigger it again another 4 times, check that it doesnt error
+        # Trigger it again another 4 times, check that it doesn't error
         test_values = [
             {
                 "current_value": 10,

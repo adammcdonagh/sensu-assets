@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-This is the base class for all Sensu Assets to build from.
+"""This is the base class for all Sensu Assets to build from.
 
 Also includes a custom argparse action to allow for environment variables
 """

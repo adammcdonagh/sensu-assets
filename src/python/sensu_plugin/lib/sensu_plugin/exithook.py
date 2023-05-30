@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Helper class to define the exit hook."""
 import sys
 
@@ -14,7 +13,7 @@ class ExitHook:
         self.exception = None
 
     def hook(self) -> None:
-        """Hook into the exit handler."""  # noqa: D401
+        """Hook into the exit handler."""
         self._orig_exit = sys.exit  # type: ignore[assignment]
         sys.exit = self.exit  # type: ignore[assignment]
         sys.excepthook = self.exc_handler

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # pylint: disable=cyclic-import
 """Test the sensu_plugin.threshold module."""
 import logging

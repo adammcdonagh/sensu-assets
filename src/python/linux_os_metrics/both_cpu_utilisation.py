@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Basic script to collect CPU metrics on Linux systems and generate alerts or metric output for Sensu.
 
 This is compatible with Linux systems only (not MacOS or Windows), as it relies on the /proc filesystem and vmstat
@@ -55,7 +54,10 @@ class LinuxCPUMetrics(SensuPluginCheck):
         self.parser.add_argument(
             "--default_warn",
             required=False,
-            help="default warn threshold. This can be specified multiple times, and must match the CPU_OVERRIDE_REGEX detailed below",
+            help=(
+                "default warn threshold. This can be specified multiple times, and must"
+                " match the CPU_OVERRIDE_REGEX detailed below"
+            ),
             type=self._cpu_override_type,
             default=[],
             action="append",
@@ -64,7 +66,10 @@ class LinuxCPUMetrics(SensuPluginCheck):
         self.parser.add_argument(
             "--default_crit",
             required=False,
-            help="default critical threshold. This can be specified multiple times, and must match the CPU_OVERRIDE_REGEX detailed below",
+            help=(
+                "default critical threshold. This can be specified multiple times, and"
+                " must match the CPU_OVERRIDE_REGEX detailed below"
+            ),
             type=self._cpu_override_type,
             default=[],
             action="append",
@@ -73,7 +78,10 @@ class LinuxCPUMetrics(SensuPluginCheck):
         self.parser.add_argument(
             "--min_severity",
             required=False,
-            help="the lowest severity to alert at for the warn threshold. One of Minor, Major, Critical",
+            help=(
+                "the lowest severity to alert at for the warn threshold. One of Minor,"
+                " Major, Critical"
+            ),
             type=str,
             default="Minor",
         )
@@ -146,7 +154,10 @@ class LinuxCPUMetrics(SensuPluginCheck):
 
         # Get CPU usage
         # This returns the number of processors, followed by CPU usage in percent overall
-        command = "cat /proc/cpuinfo | egrep 'processor.*: [0-9]+' | tail -1; vmstat 5 2 | tail -1 | awk '{print $1,$13,$14,$15,$16'}"
+        command = (
+            "cat /proc/cpuinfo | egrep 'processor.*: [0-9]+' | tail -1; vmstat 5 2 |"
+            " tail -1 | awk '{print $1,$13,$14,$15,$16'}"
+        )
         stream = os.popen(command)
         output = stream.read()
 
@@ -172,7 +183,10 @@ class LinuxCPUMetrics(SensuPluginCheck):
                 None,
                 cpu_used_percent,
                 ok_message=f"CPU utilisation is OK ({cpu_used_percent:.0f}% used)",
-                alert_message=f"CPU utilisation is > ::THRESHOLD::::ALERT_TYPE::::PERIOD:: ({cpu_used_percent:.0f}% used)",
+                alert_message=(
+                    "CPU utilisation is > ::THRESHOLD::::ALERT_TYPE::::PERIOD::"
+                    f" ({cpu_used_percent:.0f}% used)"
+                ),
                 alert_type="%",
             )
             result_message, rc = self.process_output_and_rc(
@@ -184,7 +198,10 @@ class LinuxCPUMetrics(SensuPluginCheck):
                 None,
                 cpu_cores_used,
                 ok_message=f"CPU utilisation is OK ({cpu_used_percent:.0f}% used)",
-                alert_message=f"CPU utilisation is > ::THRESHOLD:: ::ALERT_TYPE::::PERIOD:: ({cpu_cores_used:.0f} ::ALERT_TYPE:: used)",
+                alert_message=(
+                    "CPU utilisation is > ::THRESHOLD:: ::ALERT_TYPE::::PERIOD::"
+                    f" ({cpu_cores_used:.0f} ::ALERT_TYPE:: used)"
+                ),
                 alert_type="cores",
             )
             result_message, rc1 = self.process_output_and_rc(

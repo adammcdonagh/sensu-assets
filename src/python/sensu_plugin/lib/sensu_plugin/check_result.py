@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Contains the CheckResultMetadata class."""
 from dataclasses import dataclass
 

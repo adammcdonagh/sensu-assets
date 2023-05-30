@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Helper module to define Sensu thresholds and threshold results."""
 import datetime as dt
 import json
@@ -44,13 +43,19 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         warn_threshold (int): The warning threshold for this check
         crit_threshold (int): The critical threshold for this check
         team (str): The team responsible for this check
-        min_severity (str): The minimum severity for this check whenb breaching it's lowest threshold
+        min_severity (str): The minimum severity for this check whenb breaching it's
+        lowest threshold
         metadata (dict): Any metadata for this check
-        ignore (bool): Whether or not to ignore this threshold, used when a specific id is to be ignored. e.g. "/swap"
-        warn_time_seconds (int): The time window in seconds for the warning threshold before the alert is triggered
-        crit_time_seconds (int): The time window in seconds for the critical threshold before the alert is triggered
-        warn_occurrences (int): The number of occurrences for the warning threshold before the alert is triggered
-        crit_occurrences (int): The number of occurrences for the critical threshold before the alert is triggered
+        ignore (bool): Whether or not to ignore this threshold, used when a specific id
+        is to be ignored. e.g. "/swap"
+        warn_time_seconds (int): The time window in seconds for the warning threshold
+        before the alert is triggered
+        crit_time_seconds (int): The time window in seconds for the critical threshold
+        before the alert is triggered
+        warn_occurrences (int): The number of occurrences for the warning threshold
+        before the alert is triggered
+        crit_occurrences (int): The number of occurrences for the critical threshold
+        before the alert is triggered
         operator (str): The operator to use for the comparison, defaults to ">="
     """
 
@@ -89,7 +94,7 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
 
         return "Unknown"
 
-    def evaluate_threshold(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+    def evaluate_threshold(  # pylint: disable=too-many-locals
         self,
         threshold_id: int,
         current_value: int | str | float,
@@ -97,13 +102,15 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
     ) -> ThresholdResult | None:
         """Evaluate a threshold.
 
-        This method does the majority of the work. It checks whether each threshold is breached, and
-        if so populates the output message and return code.
+        This method does the majority of the work. It checks whether each threshold is
+        breached, and if so populates the output message and return code.
 
         Args:
             threshold_id (int): The ID of the threshold to evaluate
-            current_value (int | str | float): The current value to compare against the threshold
-            check_result_metadata (CheckResultMetadata): The check result metadata object
+            current_value (int | str | float): The current value to compare against the
+            threshold
+            check_result_metadata (CheckResultMetadata): The check result metadata
+            object
 
         Returns:
             ThresholdResult: The result of the threshold check
@@ -120,7 +127,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         # Load the alert cache, if one exists
         self._load_alert_cache(check_result_metadata, threshold_id)
 
-        # Check whether we're within an exclusion time period which would prevent us from alerting
+        # Check whether we're within an exclusion time period which would prevent us
+        # from alerting
         exclusion_active = self._is_in_exclusion_time()
 
         thresholds = ["crit", "warn"]
@@ -128,7 +136,10 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         rc = 0
 
         check_name = re.sub(r"[^a-zA-Z0-9\._]", "", check_result_metadata.check_name)
-        state_file = f"{check_result_metadata.state_file_dir}/alert_status_cache/{check_name}_threshold_{threshold_id}"
+        state_file = (
+            f"{check_result_metadata.state_file_dir}/alert_status_cache/"
+            f"{check_name}_threshold_{threshold_id}"
+        )
 
         ok_message = check_result_metadata.ok_message
         warn_message = check_result_metadata.warn_message
@@ -149,7 +160,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
             return result
 
         for threshold in thresholds:
-            # Initialise some important values based on the threshold severity we're checking (warn|crit)
+            # Initialise some important values based on the threshold severity we're
+            # checking (warn|crit)
             (
                 valid_threshold,
                 threshold_limit,
@@ -174,7 +186,9 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
             )
 
             is_advanced_threshold = not (not occurrences and not alert_time)
-            if threshold_limit and operator_(current_value, threshold_limit):  # type: ignore[misc]
+            if threshold_limit and operator_(  # type: ignore[misc]
+                current_value, threshold_limit
+            ):
                 # We've breached the threshold
                 logger.debug(f"Over {threshold} threshold")
                 period = (
@@ -191,7 +205,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
                 )
 
                 # Handle output for this threshold
-                # This determines whether or not to suppress output, or to append output to the result
+                # This determines whether or not to suppress output, or to append output
+                # to the result
                 (suppress_alert, has_output) = self._handle_threshold_output(
                     has_output,
                     threshold,
@@ -221,7 +236,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
                     elif rc < 2:
                         rc = 1
 
-            # If the threshold isn't breached, we need to make sure it's not in the cache
+            # If the threshold isn't breached, we need to make sure it's not in the
+            # cache
             elif is_advanced_threshold:
                 self._remove_advanced_threshold_from_cache(
                     threshold, threshold_id, state_file
@@ -261,16 +277,18 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
 
                         if threshold_no == threshold_id:
                             with open(
-                                f"{state_file_dir}/{file}", "r", encoding="utf-8"
+                                f"{state_file_dir}/{file}", encoding="utf-8"
                             ) as file_:
                                 self.metadata["alert_cache"] = json.load(file_)
 
     def _is_in_exclusion_time(self) -> bool:
         if self.exclude_times:
-            # Loop through each exclusion time, parse it and determine if we're within the time period
+            # Loop through each exclusion time, parse it and determine if we're within
+            # the time period
             for exclude_time in self.exclude_times:
                 self.logger.debug(f"Checking time based exclusion: {exclude_time}")
-                # Check if we're in one of the days of the week, or if none specified then aply to all days
+                # Check if we're in one of the days of the week, or if none specified
+                # then apply to all days
                 is_current_day = False
                 if "days_of_week" in exclude_time:
                     for day in exclude_time["days_of_week"]:
@@ -315,7 +333,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         Returns:
             tuple: The populated threshold values for the threshold type.
 
-        The first value in the dict determines whether the given threshold is valid or not.
+        The first value in the dict determines whether the given threshold is valid or
+        not.
         """
         (threshold_limit, delta, message, severity, alert_time, occurrences) = (
             None,
@@ -335,9 +354,11 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
                 delta = dt.timedelta(seconds=self.warn_time_seconds)
             message = warn_message
             severity = self.min_severity
-            # Amount of time in seconds the threshold can be breached before we actually generate an alert
+            # Amount of time in seconds the threshold can be breached before we actually
+            # generate an alert
             alert_time = self.warn_time_seconds
-            # Number of times the threshold can be breached before we actually generate an alert
+            # Number of times the threshold can be breached before we actually generate
+            # an alert
             occurrences = self.warn_occurrences
         else:
             return (False, None, None, None, None, None, None)
@@ -371,7 +392,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
             #  Now check for any occurrence or time based conditions before outputting
             first_occurrence = True
             if self.metadata and "alert_cache" in self.metadata:
-                # Loop through each instance of a previous alert to check if the threshold_no matches
+                # Loop through each instance of a previous alert to check if the
+                # threshold_no matches
 
                 for alert_instance in self.metadata["alert_cache"]:
                     if (
@@ -379,12 +401,16 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
                         and alert_instance["threshold_type"] == threshold
                     ):
                         first_occurrence = False
-                        # Determine whether to alert or not based on whether we're checking occurrences or time since first breach
+                        # Determine whether to alert or not based on whether we're
+                        # checking occurrences or time since first breach
                         if occurrences:
                             if alert_instance["occurrences"] + 1 <= occurrences:
                                 suppress_alert = True
                             logger.debug(
-                                f"Threshold has been breached {alert_instance['occurrences'] + 1} times - Allowed {occurrences} before alerting. {'Suppressing alert.' if suppress_alert else ''}"
+                                "Threshold has been breached"
+                                f" {alert_instance['occurrences'] + 1} times - Allowed"
+                                f" {occurrences} before alerting."
+                                f" {'Suppressing alert.' if suppress_alert else ''}"
                             )
                         if alert_time:
                             time_since_breach_started = (
@@ -392,22 +418,32 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
                             )
                             if time_since_breach_started < alert_time:
                                 suppress_alert = True
+                            breached_time = humanize.precisedelta(
+                                dt.timedelta(seconds=time_since_breach_started),
+                                minimum_unit="minutes",
+                            )
                             logger.debug(
-                                f"Threshold has been breached for {humanize.precisedelta(dt.timedelta(seconds=time_since_breach_started), minimum_unit='minutes')} - Allowed {period} before alerting. {'Suppressing alert.' if suppress_alert else ''}"
+                                "Threshold has been breached for"
+                                f" {breached_time} -"
+                                f" Allowed {period} before alerting."
+                                f" {'Suppressing alert.' if suppress_alert else ''}"
                             )
                         break
             else:
                 logger.debug("No alert cache")
             if first_occurrence:
-                # We've not breached before, so check to see if we are breaching now or not
+                # We've not breached before, so check to see if we are breaching now
+                # or not
                 if occurrences and occurrences > 1:
                     logger.debug(
-                        f"Threshold has been breached for the first time - Allowed {occurrences} before alerting. Suppressing alert."
+                        "Threshold has been breached for the first time - Allowed"
+                        f" {occurrences} before alerting. Suppressing alert."
                     )
                     suppress_alert = True
                 if alert_time:
                     logger.debug(
-                        f"Threshold has been breached for the first time - Allowed {period} before alerting. Suppressing alert."
+                        "Threshold has been breached for the first time - Allowed"
+                        f" {period} before alerting. Suppressing alert."
                     )
                     suppress_alert = True
 
@@ -517,7 +553,8 @@ class Threshold:  # pylint: disable=too-many-instance-attributes
         # Validate time_period, and if its valid convert it to seconds
         if not (match_ := TIME_PERIOD_REGEX.match(time_period)):
             raise ValueError(
-                f"Invalid time period '{time_period}' specified. Time period must be in the format of <number><h|m> (e.g. 1h or 30m)"
+                f"Invalid time period '{time_period}' specified. Time period must be in"
+                " the format of <number><h|m> (e.g. 1h or 30m)"
             )
 
         groups = match_.groups()

@@ -19,24 +19,17 @@
     "team": "SomeTeam",
     "exclude_times": [
       {
-        "days_of_week": [
-          "Monday",
-          "Tuesday"
-        ],
+        "days_of_week": ["Monday", "Tuesday"],
         "start_time": "10:00",
         "end_time": "12:00"
       },
       {
-        "days_of_week": [
-          "Wednesday"
-        ],
+        "days_of_week": ["Wednesday"],
         "start_time": "11:00",
         "end_time": "13:00"
       },
       {
-        "days_of_week": [
-          "Monday"
-        ],
+        "days_of_week": ["Monday"],
         "start_time": "11:00",
         "end_time": "19:00"
       }

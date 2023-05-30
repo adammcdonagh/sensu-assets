@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-Basic script to collect filesystem metrics on Unix systems and generate alerts or metric output for Sensu.
+"""Basic script to collect filesystem metrics on Unix systems and generate alerts or metric output for Sensu.
 
 This is compatible with *nix systems only (not Windows).
 """
@@ -88,7 +86,10 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
         self.parser.add_argument(
             "--filesystem_override",
             required=False,
-            help="override default thresholds for a filesystem. Can be specified multiple files for several filesystems",
+            help=(
+                "override default thresholds for a filesystem. Can be specified"
+                " multiple files for several filesystems"
+            ),
             type=filesystem_override_type,
             action="append",
         )
@@ -96,7 +97,10 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
         self.parser.add_argument(
             "--thresholds_file",
             required=False,
-            help="JSON file containing threshold overrides to use instead of command line arguments",
+            help=(
+                "JSON file containing threshold overrides to use instead of command"
+                " line arguments"
+            ),
             type=str,
             default="/var/cache/sensu/sensu-agent/filesystems.json",
         )
@@ -139,7 +143,7 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
         if platform.system() == "Linux":
             filesystem_column_index = 2
             mount_column_index = 1
-            with open("/proc/mounts", "r", encoding="utf-8") as file_:
+            with open("/proc/mounts", encoding="utf-8") as file_:
                 mounts = file_.readlines()
         elif platform.system() == "Darwin":
             filesystem_column_index = 3
@@ -178,8 +182,15 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
                     threshold_result = self.process_value(
                         mount_point,
                         used_percent,
-                        ok_message=f"Filesystem usage for {mount_point} is OK ({used_percent:.3g}::ALERT_TYPE:: used)",
-                        alert_message=f"Filesystem usage for {mount_point} > ::THRESHOLD::::ALERT_TYPE:: ({used_percent:.3g}::ALERT_TYPE:: used)",
+                        ok_message=(
+                            f"Filesystem usage for {mount_point} is OK"
+                            f" ({used_percent:.3g}::ALERT_TYPE:: used)"
+                        ),
+                        alert_message=(
+                            f"Filesystem usage for {mount_point} >"
+                            " ::THRESHOLD::::ALERT_TYPE::"
+                            f" ({used_percent:.3g}::ALERT_TYPE:: used)"
+                        ),
                         alert_type="%",
                     )
                     result_message, rc = self.process_output_and_rc(
@@ -192,7 +203,7 @@ class LinuxFilesystemMetrics(SensuPluginCheck):
     def _process_thresholds_file(self) -> None:  # pylint: disable=too-many-branches
         # Handle any threshold overrides
         if os.path.exists(self.options.thresholds_file):
-            with open(self.options.thresholds_file, mode="r", encoding="utf-8") as file:
+            with open(self.options.thresholds_file, encoding="utf-8") as file:
                 json_file = json.load(file)
                 for threshold in json_file:
                     logging.debug(threshold)
@@ -258,7 +269,8 @@ def filesystem_override_type(
     """
     if not pat.match(arg_value):
         raise argparse.ArgumentTypeError(
-            "Argument must match <FILESYSTEM>,[Y|N](,<low threshold>(,<high threshold>(,<team>(,<severity>))))"
+            "Argument must match <FILESYSTEM>,[Y|N](,<low threshold>(,<high"
+            " threshold>(,<team>(,<severity>))))"
         )
     return arg_value
 
